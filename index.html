@@ -3,6 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="清潔考核">
+    <meta name="theme-color" content="#020617">
+    
+    <!-- 內嵌 PWA Manifest -->
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22%E5%8D%97%E6%8A%95%E7%B8%A3%E6%B8%85%E6%BD%94%E8%80%83%E6%A0%B8%E7%B3%BB%E7%B5%B1%22%2C%22short_name%22%3A%22%E6%B8%85%E6%BD%94%E8%80%83%E6%A0%B8%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020617%22%2C%22theme_color%22%3A%22%23020617%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fapi.iconify.design%2Fph%2Fmap-pin-line-fill.svg%3Fcolor%3D%252322d3ee%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+
     <title>南投縣清潔考核地圖系統</title>
     
     <!-- Tailwind CSS -->
@@ -20,195 +29,168 @@
 
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            background-color: #020617; /* Slate 950 */
+            background-color: #020617; 
             color: #f8fafc;
             overflow: hidden;
             margin: 0;
             padding: 0;
-            touch-action: pan-x pan-y; /* Prevent pull-to-refresh on mobile */
+            touch-action: pan-x pan-y; 
         }
 
-        /* 玻璃擬物化效果 (Glassmorphism) */
-        .glass {
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+        .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-panel { background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5); }
 
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
-        }
-
-        /* 歡迎頁動畫 */
-        #splash-screen {
-            transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
-        }
-        
-        /* 登入畫面過渡 */
-        #login-screen {
-            transition: opacity 0.5s ease-in-out;
-        }
-        
-        .pulse-ring {
-            animation: pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
-        }
+        #splash-screen, #login-screen { transition: opacity 0.5s ease-in-out; }
+        .pulse-ring { animation: pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1); }
         @keyframes pulse {
             0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
             70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); }
             100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
         }
 
-        /* 隱藏 Leaflet 預設的版權文字以提升介面乾淨度 (僅測試用) */
         .leaflet-control-attribution { display: none !important; }
-        .leaflet-control-zoom { border: none !important; margin-top: 80px !important; }
+        .leaflet-control-zoom { border: none !important; margin-top: 150px !important; }
         .leaflet-bar a { background-color: rgba(30, 41, 59, 0.8) !important; color: #06b6d4 !important; border-color: rgba(255,255,255,0.1) !important;}
 
-        /* 自訂底部面板過渡動畫 */
-        .bottom-sheet {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .bottom-sheet.hidden-sheet {
-            transform: translateY(100%);
-        }
+        .bottom-sheet { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bottom-sheet.hidden-sheet { transform: translateY(100%); }
 
-        /* 滾動條隱藏 */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 路線顏色定義 */
-        .route-1-color { color: #06b6d4; } /* Cyan */
-        .route-2-color { color: #d946ef; } /* Fuchsia */
-        .route-3-color { color: #84cc16; } /* Lime */
-        
-        /* 永久顯示的標籤 (Tooltip) 樣式 */
         .glass-tooltip {
             background: rgba(15, 23, 42, 0.85) !important;
-            backdrop-filter: blur(4px) !important;
-            -webkit-backdrop-filter: blur(4px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
-            color: #f8fafc !important;
-            border-radius: 8px !important;
-            padding: 5px 10px !important;
-            font-size: 12px !important;
-            font-weight: 500 !important;
-            line-height: 1.4 !important;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important;
-            white-space: nowrap !important;
+            backdrop-filter: blur(4px) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            color: #f8fafc !important; border-radius: 8px !important; padding: 5px 10px !important;
+            font-size: 12px !important; font-weight: 500 !important; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important; white-space: nowrap !important;
         }
-        .leaflet-tooltip-top.glass-tooltip::before { border-top-color: rgba(15, 23, 42, 0.85) !important; }
-        .leaflet-tooltip-bottom.glass-tooltip::before { border-bottom-color: rgba(15, 23, 42, 0.85) !important; }
-        .leaflet-tooltip-left.glass-tooltip::before { border-left-color: rgba(15, 23, 42, 0.85) !important; }
-        .leaflet-tooltip-right.glass-tooltip::before { border-right-color: rgba(15, 23, 42, 0.85) !important; }
+        .hide-tooltips .glass-tooltip { opacity: 0 !important; visibility: hidden !important; transition: opacity 0.3s ease; }
         
-        /* 智慧縮放隱藏標籤 */
-        .hide-tooltips .glass-tooltip {
-            opacity: 0 !important;
-            visibility: hidden !important;
-            transition: opacity 0.3s ease;
-        }
-        
-        /* 使用者當前位置光點 (呼吸燈效果) */
-        .user-location-marker {
-            background-color: #3b82f6; 
-            border: 2px solid white;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
-            position: relative;
-            z-index: 1000;
-        }
-        .user-pulse {
-            position: absolute;
-            top: -8px;
-            left: -8px;
-            width: 32px;
-            height: 32px;
-            background-color: rgba(59, 130, 246, 0.6);
-            border-radius: 50%;
-            animation: user-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-        @keyframes user-ping {
-            75%, 100% {
-                transform: scale(2);
-                opacity: 0;
-            }
-        }
+        .user-location-marker { background-color: #3b82f6; border: 2px solid white; border-radius: 50%; width: 16px; height: 16px; box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); position: relative; z-index: 1000; }
+        .user-pulse { position: absolute; top: -8px; left: -8px; width: 32px; height: 32px; background-color: rgba(59, 130, 246, 0.6); border-radius: 50%; animation: user-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
+        @keyframes user-ping { 75%, 100% { transform: scale(2); opacity: 0; } }
     </style>
 </head>
 <body class="w-screen h-screen relative">
 
-    <!-- 1. 歡迎頁 (Splash Screen) -->
+    <!-- 1. 歡迎頁 -->
     <div id="splash-screen" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950">
         <div class="relative flex items-center justify-center w-32 h-32 mb-8">
             <div class="absolute inset-0 rounded-full border-2 border-cyan-500 pulse-ring"></div>
             <i class="ph ph-map-pin-line text-6xl text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]"></i>
         </div>
         <h1 class="text-3xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-2">清潔考核系統</h1>
-        <p class="text-slate-400 tracking-widest text-sm uppercase">Smart Inspection Map System</p>
+        <p class="text-slate-400 tracking-widest text-sm uppercase">Smart Inspection System</p>
         <div class="mt-12 text-cyan-500/50 text-sm animate-pulse">系統載入中 System Loading...</div>
     </div>
 
-    <!-- 1.5. 密碼登入頁面 (Login Screen) -->
+    <!-- 1.5 密碼登入頁面 -->
     <div id="login-screen" class="fixed inset-0 z-[9998] flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-xl">
         <div class="glass-panel p-8 rounded-2xl flex flex-col items-center w-10/12 max-w-sm shadow-2xl border border-cyan-500/30">
             <div class="w-16 h-16 bg-cyan-500/20 rounded-full flex items-center justify-center mb-4">
                 <i class="ph-fill ph-lock-key text-3xl text-cyan-400"></i>
             </div>
             <h2 class="text-xl font-bold text-white mb-2 tracking-widest">系統登入</h2>
-            <p class="text-slate-400 text-sm mb-6">請輸入授權碼以存取地圖</p>
-
+            <p class="text-slate-400 text-sm mb-6">請輸入授權碼以存取資料</p>
             <input type="password" id="pwd-input" placeholder="請輸入密碼" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white text-center tracking-widest focus:outline-none focus:border-cyan-400 mb-2 transition-colors">
             <p id="pwd-error" class="text-red-400 text-xs mb-4 h-4 opacity-0 transition-opacity">密碼錯誤，請重新輸入</p>
-
             <button onclick="checkPassword()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all active:scale-95 tracking-widest">
                 進入系統
             </button>
         </div>
     </div>
 
+    <!-- PWA 安裝提示 (選用) -->
+    <div id="pwa-prompt" class="fixed top-4 left-4 right-4 z-[9997] bg-blue-600 text-white p-4 rounded-xl shadow-2xl flex items-start gap-3 hidden transition-transform translate-y-[-150%]">
+        <i class="ph-fill ph-info text-2xl"></i>
+        <div class="flex-1">
+            <h4 class="font-bold mb-1">將系統加入主畫面</h4>
+            <p class="text-sm opacity-90 leading-tight">點擊瀏覽器下方的「分享」按鈕，選擇「加入主畫面」，即可像 App 一樣全螢幕使用！</p>
+        </div>
+        <button onclick="document.getElementById('pwa-prompt').classList.add('hidden')" class="text-white opacity-70 hover:opacity-100"><i class="ph ph-x text-lg"></i></button>
+    </div>
+
     <!-- 2. 主畫面 (地圖容器) -->
     <div id="map" class="absolute inset-0 z-0"></div>
 
-    <!-- 3. UI 覆蓋層 -->
+    <!-- 2.5 清單模式 (List View) -->
+    <div id="list-view" class="absolute inset-0 z-[5] bg-slate-950 overflow-y-auto hidden pt-[160px] pb-10 px-4">
+        <h3 class="text-lg font-bold text-cyan-400 mb-4 flex items-center gap-2 border-b border-slate-800 pb-2"><i class="ph-fill ph-list-bullets"></i> 今日行程清單</h3>
+        <div id="list-container" class="flex flex-col gap-3">
+            <!-- JavaScript 動態生成清單 -->
+        </div>
+    </div>
+
+    <!-- 3. UI 覆蓋層 (頂部與底部) -->
     <div id="ui-layer" class="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between">
         
-        <!-- 頂部：標題與鄉鎮選擇器 -->
-        <div class="pointer-events-auto w-full pt-4 px-4 pb-2 bg-gradient-to-b from-slate-950/80 to-transparent">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold flex items-center gap-2">
+        <!-- 頂部：搜尋、進度、選單 -->
+        <div class="pointer-events-auto w-full pt-4 px-4 pb-3 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent">
+            <!-- Title & View Toggle -->
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-xl font-bold flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
                     <i class="ph-fill ph-target text-cyan-400"></i>
-                    <span id="header-title">請選擇考核鄉鎮</span>
+                    <span id="header-title">請選擇鄉鎮</span>
                 </h2>
-                <button class="glass p-2 rounded-full text-slate-300 hover:text-white" onclick="map.fitBounds(currentBounds)">
-                    <i class="ph ph-corners-out text-lg"></i>
-                </button>
+                <div class="flex gap-2">
+                    <button class="glass w-10 h-10 rounded-full text-slate-300 hover:text-white flex justify-center items-center" onclick="toggleView()" id="btn-toggle-view">
+                        <i class="ph-fill ph-list text-xl"></i>
+                    </button>
+                    <button class="glass w-10 h-10 rounded-full text-slate-300 hover:text-white flex justify-center items-center" onclick="map.fitBounds(currentBounds)">
+                        <i class="ph ph-corners-out text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 全局搜尋列 -->
+            <div class="relative w-full mb-3">
+                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                <input type="text" id="search-input" placeholder="搜尋南投縣考核路線或地點..." class="w-full bg-slate-800/80 border border-slate-700 rounded-full pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors" oninput="handleSearch()">
+                <!-- 搜尋結果下拉框 -->
+                <div id="search-results" class="absolute top-full left-0 right-0 mt-1 bg-slate-800 rounded-xl shadow-2xl z-[50] hidden max-h-48 overflow-y-auto border border-slate-700"></div>
             </div>
             
             <!-- 鄉鎮橫向捲動選單 -->
-            <div class="flex gap-3 overflow-x-auto no-scrollbar py-2" id="township-selector">
-                <!-- JavaScript 動態生成按鈕 -->
+            <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 mb-2" id="township-selector"></div>
+
+            <!-- 進度條 -->
+            <div class="w-full px-1">
+                <div class="flex justify-between text-[11px] text-slate-400 font-bold mb-1">
+                    <span id="progress-text">本區考核進度：0/5</span>
+                    <span id="progress-percent" class="text-cyan-400">0%</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div id="progress-bar" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
             </div>
         </div>
 
-        <!-- 底部：資訊面板 (Bottom Sheet) -->
-        <div id="bottom-sheet" class="pointer-events-auto bottom-sheet hidden-sheet glass-panel w-full rounded-t-3xl p-5 pb-8 shadow-2xl">
-            <div class="w-12 h-1.5 bg-slate-600 rounded-full mx-auto mb-4"></div>
+        <!-- 底部：資訊面板 -->
+        <div id="bottom-sheet" class="pointer-events-auto bottom-sheet hidden-sheet glass-panel w-full rounded-t-3xl p-5 pb-8 shadow-2xl max-h-[80vh] overflow-y-auto">
+            <div class="w-12 h-1.5 bg-slate-600 rounded-full mx-auto mb-4 cursor-pointer" onclick="hideBottomSheet()"></div>
             
             <div id="sheet-content">
-                <h3 class="text-xl font-bold mb-1 text-white" id="sheet-title">點位名稱</h3>
-                <p class="text-sm text-slate-400 mb-5" id="sheet-desc">點擊地圖上的路線或圖示查看詳細資訊</p>
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-xl font-bold text-white pr-2" id="sheet-title">點位名稱</h3>
+                    <!-- 狀態追蹤按鈕 (打卡) -->
+                    <button id="mark-btn" class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all border" onclick="toggleItemStatus()">
+                        <i class="ph-fill ph-check-circle text-lg"></i> <span id="mark-text">未考核</span>
+                    </button>
+                </div>
+                <p class="text-sm text-slate-400 mb-5" id="sheet-desc">詳細資訊</p>
                 
+                <!-- 現場拍照區塊 -->
+                <div class="mb-5 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <h4 class="text-sm font-bold text-slate-300 mb-2 flex items-center gap-2"><i class="ph-fill ph-camera text-cyan-400"></i> 現場照片紀錄</h4>
+                    <div id="photo-preview-container" class="hidden mb-3">
+                        <img id="photo-preview" src="" class="w-full h-32 object-cover rounded-lg border border-slate-600">
+                    </div>
+                    <label class="w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors">
+                        <i class="ph ph-upload-simple text-lg"></i> 拍攝或上傳照片
+                        <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handlePhotoUpload(event)">
+                    </label>
+                </div>
+
                 <button id="nav-btn" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all active:scale-95 hidden">
                     <i class="ph-fill ph-navigation-arrow text-xl"></i>
                     <span>開啟 Google Maps 導航</span>
@@ -216,21 +198,14 @@
             </div>
         </div>
 
-        <!-- 實時定位按鈕 (Locate Me) -->
         <button id="locate-btn" class="pointer-events-auto absolute bottom-8 right-4 z-[1000] glass p-3 rounded-full text-cyan-400 hover:text-white hover:bg-slate-800 shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all active:scale-95" onclick="locateUser()">
             <i class="ph-fill ph-crosshair text-2xl"></i>
         </button>
-
-        <!-- KML 匯入按鈕 -->
-        <button class="pointer-events-auto absolute bottom-24 right-4 z-[1000] glass p-3 rounded-full text-fuchsia-400 hover:text-white hover:bg-slate-800 shadow-[0_0_15px_rgba(217,70,239,0.3)] transition-all active:scale-95" onclick="document.getElementById('kml-upload').click()" title="匯入您的 KML 點位">
-            <i class="ph-fill ph-folder-open text-2xl"></i>
-        </button>
-        <input type="file" id="kml-upload" accept=".kml,.xml" class="hidden" onchange="handleKMLUpload(event)" multiple>
     </div>
 
-    <!-- 4. 系統邏輯腳本 -->
+    <!-- 4. 系統腳本 -->
     <script>
-        // --- 資料庫 (已根據您提供的 Google My Maps KML 精準座標全面更新) ---
+        // --- 1. 資料庫 (13鄉鎮 39條路線 100%座標) ---
         const mapData = {
             "caotun": {
                 name: "草屯鎮",
@@ -364,334 +339,336 @@
             }
         };
 
-        // --- 地圖初始化 ---
+        // --- 2. 狀態管理 (使用 LocalStorage 保存進度與照片) ---
+        let inspectionState = JSON.parse(localStorage.getItem('nantou_inspection')) || {};
+        let inspectionPhotos = JSON.parse(localStorage.getItem('nantou_photos')) || {};
+        let currentTownshipId = null;
+        let currentItemId = null; // 當前選取的點位ID
+
+        function saveState() {
+            localStorage.setItem('nantou_inspection', JSON.stringify(inspectionState));
+            localStorage.setItem('nantou_photos', JSON.stringify(inspectionPhotos));
+            updateProgressBar();
+            if(!isListView) loadTownship(currentTownshipId); // 重新渲染地圖顏色
+            else renderListView(); // 重新渲染清單
+        }
+
+        // --- 3. 地圖與 UI 核心 ---
         let map;
         let activeLayers = [];
         let currentBounds = null;
-        let userMarker = null; // 儲存使用者的 GPS 定位標記
+        let userMarker = null;
+        let isListView = false;
 
-        // 自訂科技感圖示 (SVG)
-        const createCustomIcon = (iconColor, iconName) => {
-            const svgTemplate = `
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+        const createCustomIcon = (iconColor, iconName, opacity=1) => {
+            return L.divIcon({
+                className: 'custom-leaflet-icon',
+                html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" style="opacity:${opacity}">
                     <circle cx="20" cy="20" r="18" fill="rgba(15, 23, 42, 0.8)" stroke="${iconColor}" stroke-width="2"/>
-                    <circle cx="20" cy="20" r="24" fill="none" stroke="${iconColor}" stroke-width="1" opacity="0.4" class="pulse"/>
+                    ${opacity === 1 ? `<circle cx="20" cy="20" r="24" fill="none" stroke="${iconColor}" stroke-width="1" opacity="0.4" class="pulse"/>` : ''}
                     <foreignObject x="8" y="8" width="24" height="24">
                         <div xmlns="http://www.w3.org/1999/xhtml" style="display:flex; justify-content:center; align-items:center; height:100%; color:${iconColor}; font-size:18px;">
                             <i class="${iconName}"></i>
                         </div>
                     </foreignObject>
-                </svg>
-            `;
-            return L.divIcon({
-                className: 'custom-leaflet-icon',
-                html: svgTemplate,
-                iconSize: [40, 40],
-                iconAnchor: [20, 20]
+                </svg>`,
+                iconSize: [40, 40], iconAnchor: [20, 20]
             });
         };
 
-        const icons = {
-            office: createCustomIcon('#38bdf8', 'ph-fill ph-bank'),       // 藍色公所
-            restaurant: createCustomIcon('#fbbf24', 'ph-fill ph-fork-knife'), // 黃色餐廳
-            start: createCustomIcon('#4ade80', 'ph-fill ph-flag-pennant'), // 綠色起點
-            end: createCustomIcon('#f87171', 'ph-fill ph-flag-checkered')   // 紅色終點
-        };
+        function getIcons(isDone) {
+            return {
+                office: createCustomIcon(isDone ? '#64748b' : '#38bdf8', 'ph-fill ph-bank', isDone ? 0.6 : 1),
+                restaurant: createCustomIcon(isDone ? '#64748b' : '#fbbf24', 'ph-fill ph-fork-knife', isDone ? 0.6 : 1),
+                start: createCustomIcon(isDone ? '#64748b' : '#4ade80', 'ph-fill ph-flag-pennant', isDone ? 0.6 : 1),
+                end: createCustomIcon(isDone ? '#64748b' : '#f87171', 'ph-fill ph-flag-checkered', isDone ? 0.6 : 1)
+            };
+        }
 
         function initMap() {
-            // 南投縣中心點
             map = L.map('map', { zoomControl: false }).setView([23.903, 120.951], 10);
             L.control.zoom({ position: 'topright' }).addTo(map);
-
-            // 套用深色科技感圖資 (CartoDB Dark Matter)
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-                subdomains: 'abcd',
-                maxZoom: 20
+                attribution: '&copy; OpenStreetMap', subdomains: 'abcd', maxZoom: 20
             }).addTo(map);
             
-            // 加入智慧縮放監聽器：拉遠時自動隱藏標籤防重疊
             map.on('zoomend', function() {
                 const mapContainer = document.getElementById('map');
-                if (map.getZoom() < 14) {
-                    mapContainer.classList.add('hide-tooltips');
-                } else {
-                    mapContainer.classList.remove('hide-tooltips');
-                }
+                if (map.getZoom() < 14) mapContainer.classList.add('hide-tooltips');
+                else mapContainer.classList.remove('hide-tooltips');
             });
         }
 
-        // --- GPS 精準定位功能 ---
-        function locateUser() {
-            const btnIcon = document.querySelector('#locate-btn i');
-            // 切換為載入中動畫
-            btnIcon.className = "ph ph-spinner animate-spin text-2xl text-amber-400"; 
-
-            if (!navigator.geolocation) {
-                alert("您的瀏覽器不支援地理定位功能！");
-                btnIcon.className = "ph-fill ph-crosshair text-2xl text-cyan-400";
-                return;
-            }
-
-            // 請求高精度 GPS 權限
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-
-                    // 若已有舊定位點，先移除
-                    if (userMarker) {
-                        map.removeLayer(userMarker);
-                    }
-
-                    // 建立自訂的「藍色呼吸燈」光點
-                    const userIcon = L.divIcon({
-                        className: 'custom-user-icon',
-                        html: `<div class="relative"><div class="user-pulse"></div><div class="user-location-marker"></div></div>`,
-                        iconSize: [16, 16],
-                        iconAnchor: [8, 8]
-                    });
-
-                    // 放置標記並加上 Tooltip
-                    userMarker = L.marker([lat, lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
-                    userMarker.bindTooltip('<span class="text-blue-300 font-bold">📍 我的位置</span>', {
-                        permanent: true,
-                        direction: 'top',
-                        className: 'glass-tooltip',
-                        offset: [0, -10]
-                    });
-
-                    // 地圖視角平滑飛向使用者當前位置並放大
-                    map.flyTo([lat, lng], 16, { animate: true, duration: 1.5 });
-                    
-                    // 恢復按鈕圖示
-                    btnIcon.className = "ph-fill ph-crosshair text-2xl text-cyan-400"; 
-                },
-                (error) => {
-                    console.error("定位錯誤:", error);
-                    alert("無法獲取您的位置！請確認：\n1. 手機「定位/GPS」已開啟\n2. 允許瀏覽器取用位置權限");
-                    btnIcon.className = "ph-fill ph-crosshair text-2xl text-cyan-400";
-                },
-                {
-                    enableHighAccuracy: true, // 強制使用高精度 GPS (如硬體支援)
-                    timeout: 10000,
-                    maximumAge: 0
-                }
-            );
-        }
-
-        // --- KML 檔案匯入解析功能 ---
-        function handleKMLUpload(event) {
-            const files = event.target.files;
-            if(!files.length) return;
-
-            document.querySelector('#header-title').innerText = "載入自訂 KML 中...";
-
-            Array.from(files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const text = e.target.result;
-                    parseAndRenderKML(text);
-                };
-                reader.readAsText(file);
-            });
-            
-            // 清空 input 讓下次可以重複選擇同個檔案
-            event.target.value = '';
-        }
-
-        function parseAndRenderKML(kmlText) {
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(kmlText, "text/xml");
-            const placemarks = xml.querySelectorAll("Placemark");
-            
-            const kmlBounds = [];
-
-            // 為了不與內建資料混淆，匯入的 KML 我們套用獨立的顏色
-            placemarks.forEach(p => {
-                const name = p.querySelector("name")?.textContent || "未命名點位";
-                
-                // 過濾掉可能夾帶的 HTML 標籤
-                let rawDesc = p.querySelector("description")?.textContent || "自訂匯入位置";
-                const tempDiv = document.createElement("div");
-                tempDiv.innerHTML = rawDesc;
-                const desc = tempDiv.textContent || tempDiv.innerText || "";
-
-                // 解析點位 (Point)
-                const pointCoord = p.querySelector("Point coordinates")?.textContent;
-                if (pointCoord) {
-                    const [lng, lat] = pointCoord.trim().split(',').map(Number);
-                    if (lat && lng) {
-                        const marker = L.marker([lat, lng], { icon: icons.start }).addTo(map);
-                        marker.bindTooltip(`<span class="text-fuchsia-400 font-bold">${name}</span>`, {
-                            permanent: true, direction: 'top', className: 'glass-tooltip', offset: [0, -20]
-                        });
-                        marker.on('click', () => showBottomSheet(name, desc, lat, lng));
-                        activeLayers.push(marker);
-                        kmlBounds.push([lat, lng]);
-                    }
-                }
-
-                // 解析自訂路線 (LineString)
-                const lineCoord = p.querySelector("LineString coordinates")?.textContent;
-                if (lineCoord) {
-                    const coords = lineCoord.trim().split(/\s+/).map(pair => {
-                        const [lng, lat] = pair.split(',').map(Number);
-                        return [lat, lng];
-                    }).filter(c => !isNaN(c[0]) && !isNaN(c[1]));
-                    
-                    if (coords.length > 0) {
-                        const polyline = L.polyline(coords, {
-                            color: '#d946ef', // Fuchsia 色
-                            weight: 5,
-                            opacity: 0.9,
-                            dashArray: '10, 10'
-                        }).addTo(map);
-                        polyline.bindTooltip(`<span class="text-white font-bold">${name}</span>`, {
-                            permanent: true, direction: 'center', className: 'glass-tooltip'
-                        });
-                        polyline.on('click', () => showBottomSheet(name, desc, coords[0][0], coords[0][1]));
-                        activeLayers.push(polyline);
-                        kmlBounds.push(...coords);
-                    }
-                }
-            });
-
-            // 將地圖鏡頭移動到匯入的範圍
-            if (kmlBounds.length > 0) {
-                currentBounds = L.latLngBounds(kmlBounds);
-                map.fitBounds(currentBounds, { padding: [50, 50], animate: true, duration: 1.5 });
-                document.querySelector('#header-title').innerText = "預覽：您的自訂 KML 地圖";
-                hideBottomSheet();
-            }
-        }
-
-        // --- UI 控制與互動 ---
-        const bottomSheet = document.getElementById('bottom-sheet');
-        const sheetTitle = document.getElementById('sheet-title');
-        const sheetDesc = document.getElementById('sheet-desc');
-        const navBtn = document.getElementById('nav-btn');
-
-        function showBottomSheet(title, desc, lat, lng) {
-            sheetTitle.innerText = title;
-            sheetDesc.innerHTML = desc;
-            
-            navBtn.classList.remove('hidden');
-            navBtn.onclick = () => {
-                // 喚醒手機 Google Maps 導航
-                const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-                window.open(url, '_blank');
-            };
-            
-            bottomSheet.classList.remove('hidden-sheet');
-        }
-
-        function hideBottomSheet() {
-            bottomSheet.classList.add('hidden-sheet');
-        }
-
-        // 載入指定鄉鎮的資料到地圖
         function loadTownship(id) {
+            currentTownshipId = id;
             const data = mapData[id];
             if (!data) return;
 
-            // 1. 更新標題
             document.getElementById('header-title').innerText = `${data.name} 考核點位`;
             
-            // 更新選單按鈕樣式
             document.querySelectorAll('.township-btn').forEach(btn => {
                 if(btn.dataset.id === id) {
-                    btn.classList.add('bg-cyan-600', 'border-cyan-400', 'text-white');
-                    btn.classList.remove('bg-slate-800/50', 'border-slate-600', 'text-slate-300');
+                    btn.className = 'township-btn whitespace-nowrap px-4 py-2 rounded-full border text-sm font-medium transition-all backdrop-blur-md shadow-lg bg-cyan-600 border-cyan-400 text-white';
                 } else {
-                    btn.classList.remove('bg-cyan-600', 'border-cyan-400', 'text-white');
-                    btn.classList.add('bg-slate-800/50', 'border-slate-600', 'text-slate-300');
+                    btn.className = 'township-btn whitespace-nowrap px-4 py-2 rounded-full border text-sm font-medium transition-all backdrop-blur-md shadow-lg bg-slate-800/50 border-slate-600 text-slate-300';
                 }
             });
 
-            // 2. 清除舊圖層
             activeLayers.forEach(layer => map.removeLayer(layer));
             activeLayers = [];
             hideBottomSheet();
+            updateProgressBar();
 
-            // 3. 準備邊界計算
             const bounds = [];
-
-            // 4. 加入公所與餐廳
-            const addPOI = (poi) => {
-                const marker = L.marker([poi.lat, poi.lng], { icon: icons[poi.type] }).addTo(map);
-                marker.on('click', () => showBottomSheet(poi.name, `座標：${poi.lat.toFixed(4)}, ${poi.lng.toFixed(4)}`, poi.lat, poi.lng));
+            const drawPOI = (poi, itemId) => {
+                const isDone = inspectionState[itemId];
+                const marker = L.marker([poi.lat, poi.lng], { icon: getIcons(isDone)[poi.type] }).addTo(map);
+                marker.on('click', () => showBottomSheet(poi.name, `類型：${poi.type === 'office'?'鄉鎮公所':'聚餐餐廳'}`, poi.lat, poi.lng, itemId));
                 
-                // 加入永久顯示標籤
-                const colorClass = poi.type === 'office' ? 'text-sky-400' : 'text-amber-400';
-                marker.bindTooltip(`<span class="${colorClass} font-bold">${poi.name}</span>`, {
-                    permanent: true,
-                    direction: 'top',
-                    className: 'glass-tooltip',
-                    offset: [0, -20]
-                });
-
-                activeLayers.push(marker);
-                bounds.push([poi.lat, poi.lng]);
+                const colorClass = isDone ? 'text-slate-400' : (poi.type === 'office' ? 'text-sky-400' : 'text-amber-400');
+                marker.bindTooltip(`<span class="${colorClass} font-bold">${poi.name}${isDone?' (已完成)':''}</span>`, { permanent: true, direction: 'top', className: 'glass-tooltip', offset: [0, -20] });
+                activeLayers.push(marker); bounds.push([poi.lat, poi.lng]);
             };
-            addPOI(data.office);
-            addPOI(data.restaurant);
 
-            // 5. 加入路線 (起點、終點、連線)
+            drawPOI(data.office, `${id}_office`);
+            drawPOI(data.restaurant, `${id}_restaurant`);
+
             data.routes.forEach(route => {
-                // 畫線
-                const polyline = L.polyline([route.start, route.end], {
-                    color: route.color,
-                    weight: 4,
-                    opacity: 0.8,
-                    dashArray: '10, 10', // 虛線效果增加科技感
-                    lineCap: 'round'
-                }).addTo(map);
+                const itemId = `${id}_route_${route.id}`;
+                const isDone = inspectionState[itemId];
+                const routeColor = isDone ? '#475569' : route.color;
+                const opacity = isDone ? 0.5 : 0.8;
+
+                const polyline = L.polyline([route.start, route.end], { color: routeColor, weight: 5, opacity: opacity, dashArray: '10, 10' }).addTo(map);
+                const startMarker = L.marker(route.start, { icon: getIcons(isDone).start }).addTo(map);
+                const endMarker = L.marker(route.end, { icon: getIcons(isDone).end }).addTo(map);
+
+                const openSheet = () => showBottomSheet(route.name, `狀態：${isDone?'已考核':'未考核'}`, route.start[0], route.start[1], itemId);
+                polyline.on('click', openSheet); startMarker.on('click', openSheet); endMarker.on('click', openSheet);
                 
-                // 起點標記
-                const startMarker = L.marker(route.start, { icon: icons.start }).addTo(map);
-                startMarker.on('click', () => showBottomSheet(`${route.name} (起點)`, '點擊下方按鈕開始導航至此處', route.start[0], route.start[1]));
-                startMarker.bindTooltip(`<div class="text-green-400 font-bold mb-0.5">🟢 起點</div><div class="text-slate-200">${route.name}</div>`, {
-                    permanent: true, direction: 'right', className: 'glass-tooltip text-center', offset: [15, 0]
-                });
-                
-                // 終點標記
-                const endMarker = L.marker(route.end, { icon: icons.end }).addTo(map);
-                endMarker.on('click', () => showBottomSheet(`${route.name} (終點)`, '點擊下方按鈕開始導航至此處', route.end[0], route.end[1]));
-                endMarker.bindTooltip(`<div class="text-red-400 font-bold mb-0.5">🏁 終點</div><div class="text-slate-200">${route.name}</div>`, {
-                    permanent: true, direction: 'left', className: 'glass-tooltip text-center', offset: [-15, 0]
-                });
-                
-                // 點擊路線本身
-                polyline.on('click', () => showBottomSheet(route.name, `包含起點與終點，共兩處考核點`, route.start[0], route.start[1]));
+                startMarker.bindTooltip(`<div class="${isDone?'text-slate-400':'text-green-400'} font-bold mb-0.5">🟢 起點</div><div class="text-slate-200">${route.name}</div>`, { permanent: true, direction: 'right', className: 'glass-tooltip text-center', offset: [15, 0] });
+                endMarker.bindTooltip(`<div class="${isDone?'text-slate-400':'text-red-400'} font-bold mb-0.5">🏁 終點</div><div class="text-slate-200">${route.name}</div>`, { permanent: true, direction: 'left', className: 'glass-tooltip text-center', offset: [-15, 0] });
 
                 activeLayers.push(polyline, startMarker, endMarker);
                 bounds.push(route.start, route.end);
             });
 
-            // 6. 縮放視角以包含所有點位
             if (bounds.length > 0) {
                 currentBounds = L.latLngBounds(bounds);
                 map.fitBounds(currentBounds, { padding: [50, 50], animate: true, duration: 1 });
             }
         }
 
-        // 初始化鄉鎮選單
-        function initMenu() {
-            const selector = document.getElementById('township-selector');
-            Object.keys(mapData).forEach((id, index) => {
-                const btn = document.createElement('button');
-                btn.dataset.id = id;
-                btn.className = `township-btn whitespace-nowrap px-4 py-2 rounded-full border text-sm font-medium transition-all backdrop-blur-md shadow-lg ${index === 0 ? 'bg-cyan-600 border-cyan-400 text-white' : 'bg-slate-800/50 border-slate-600 text-slate-300'}`;
-                btn.innerText = mapData[id].name;
-                btn.onclick = () => loadTownship(id);
-                selector.appendChild(btn);
-            });
+        // --- 4. 進度條與狀態切換 ---
+        function updateProgressBar() {
+            if(!currentTownshipId) return;
+            const data = mapData[currentTownshipId];
+            const totalItems = 2 + data.routes.length; // 公所 + 餐廳 + 路線數
+            let completedItems = 0;
+            
+            if(inspectionState[`${currentTownshipId}_office`]) completedItems++;
+            if(inspectionState[`${currentTownshipId}_restaurant`]) completedItems++;
+            data.routes.forEach(r => { if(inspectionState[`${currentTownshipId}_route_${r.id}`]) completedItems++; });
+
+            const pct = Math.round((completedItems / totalItems) * 100);
+            document.getElementById('progress-text').innerText = `本區進度：${completedItems} / ${totalItems} 點位`;
+            document.getElementById('progress-percent').innerText = `${pct}%`;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
         }
 
-        // --- 啟動程序與登入邏輯 ---
-        
-        // ★ 在這裡設定您的專屬密碼 ★
+        function toggleItemStatus() {
+            if(!currentItemId) return;
+            inspectionState[currentItemId] = !inspectionState[currentItemId];
+            
+            // 更新按鈕外觀
+            const btn = document.getElementById('mark-btn');
+            const text = document.getElementById('mark-text');
+            if(inspectionState[currentItemId]) {
+                btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-500/20 border-emerald-500 text-emerald-400";
+                text.innerText = "已考核";
+            } else {
+                btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-slate-800 border-slate-600 text-slate-300";
+                text.innerText = "未考核";
+            }
+            saveState();
+        }
+
+        // --- 5. 現場拍照功能 (Canvas 壓縮) ---
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if(!file || !currentItemId) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 600; // 壓縮尺寸以符合 localStorage 限制
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    const base64Data = canvas.toDataURL('image/jpeg', 0.6);
+                    inspectionPhotos[currentItemId] = base64Data;
+                    saveState();
+                    
+                    // 顯示預覽
+                    document.getElementById('photo-preview-container').classList.remove('hidden');
+                    document.getElementById('photo-preview').src = base64Data;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- 6. 底部面板控制 ---
+        const bottomSheet = document.getElementById('bottom-sheet');
+        function showBottomSheet(title, desc, lat, lng, itemId) {
+            currentItemId = itemId;
+            document.getElementById('sheet-title').innerText = title;
+            document.getElementById('sheet-desc').innerHTML = desc;
+            
+            // 檢查狀態
+            const isDone = inspectionState[itemId];
+            const btn = document.getElementById('mark-btn');
+            const text = document.getElementById('mark-text');
+            if(isDone) {
+                btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-500/20 border-emerald-500 text-emerald-400";
+                text.innerText = "已考核";
+            } else {
+                btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-slate-800 border-slate-600 text-slate-300";
+                text.innerText = "未考核";
+            }
+
+            // 檢查照片
+            if(inspectionPhotos[itemId]) {
+                document.getElementById('photo-preview-container').classList.remove('hidden');
+                document.getElementById('photo-preview').src = inspectionPhotos[itemId];
+            } else {
+                document.getElementById('photo-preview-container').classList.add('hidden');
+            }
+            
+            const navBtn = document.getElementById('nav-btn');
+            navBtn.classList.remove('hidden');
+            navBtn.onclick = () => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank'); };
+            
+            bottomSheet.classList.remove('hidden-sheet');
+        }
+        function hideBottomSheet() { bottomSheet.classList.add('hidden-sheet'); currentItemId = null; }
+
+        // --- 7. 清單模式與雙模切換 ---
+        function toggleView() {
+            isListView = !isListView;
+            const listEl = document.getElementById('list-view');
+            const btnIcon = document.querySelector('#btn-toggle-view i');
+            hideBottomSheet();
+
+            if (isListView) {
+                listEl.classList.remove('hidden');
+                btnIcon.className = "ph-fill ph-map-trifold text-xl text-cyan-400"; // 切換為地圖圖示
+                renderListView();
+            } else {
+                listEl.classList.add('hidden');
+                btnIcon.className = "ph-fill ph-list text-xl"; // 切換回清單圖示
+                map.invalidateSize(); // 修復 Leaflet 尺寸問題
+            }
+        }
+
+        function renderListView(filterText = "") {
+            const container = document.getElementById('list-container');
+            container.innerHTML = '';
+            
+            const renderItem = (title, type, lat, lng, itemId, tId) => {
+                if (filterText && !title.includes(filterText) && !mapData[tId].name.includes(filterText)) return;
+                
+                const isDone = inspectionState[itemId];
+                const hasPhoto = !!inspectionPhotos[itemId];
+                
+                container.innerHTML += `
+                    <div class="bg-slate-900 border ${isDone ? 'border-emerald-500/30' : 'border-slate-700'} p-4 rounded-xl shadow-lg flex items-center justify-between cursor-pointer active:scale-95 transition-transform" onclick="jumpToMap('${tId}', '${itemId}', ${lat}, ${lng}, '${title}')">
+                        <div>
+                            <div class="text-xs text-slate-400 mb-1 flex gap-2">
+                                <span class="bg-slate-800 px-2 py-0.5 rounded">${mapData[tId].name}</span>
+                                ${isDone ? '<span class="text-emerald-400"><i class="ph-fill ph-check-circle"></i> 已完勘</span>' : ''}
+                                ${hasPhoto ? '<span class="text-amber-400"><i class="ph-fill ph-camera"></i> 有照片</span>' : ''}
+                            </div>
+                            <h4 class="text-white font-bold text-lg">${title}</h4>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400">
+                            <i class="ph-fill ph-navigation-arrow text-lg"></i>
+                        </div>
+                    </div>
+                `;
+            };
+
+            // 如果有搜尋字串，就搜全縣；如果沒有，只顯示當前鄉鎮
+            const targets = filterText ? Object.keys(mapData) : [currentTownshipId];
+            
+            targets.forEach(tId => {
+                const d = mapData[tId];
+                renderItem(d.office.name, 'office', d.office.lat, d.office.lng, `${tId}_office`, tId);
+                d.routes.forEach(r => renderItem(r.name, 'route', r.start[0], r.start[1], `${tId}_route_${r.id}`, tId));
+                renderItem(d.restaurant.name, 'restaurant', d.restaurant.lat, d.restaurant.lng, `${tId}_restaurant`, tId);
+            });
+
+            if(container.innerHTML === '') container.innerHTML = '<p class="text-slate-500 text-center py-10">找不到符合的地點或路線</p>';
+        }
+
+        function jumpToMap(tId, itemId, lat, lng, title) {
+            if (isListView) toggleView();
+            if (tId !== currentTownshipId) loadTownship(tId);
+            map.flyTo([lat, lng], 16, { animate: true, duration: 1 });
+            setTimeout(() => showBottomSheet(title, '從清單快速跳轉', lat, lng, itemId), 1000);
+        }
+
+        // --- 8. 全局搜尋 ---
+        function handleSearch() {
+            const input = document.getElementById('search-input').value.trim();
+            const resultBox = document.getElementById('search-results');
+            
+            if (input.length === 0) {
+                resultBox.classList.add('hidden');
+                if (isListView) renderListView(); // 恢復清單
+                return;
+            }
+
+            if (isListView) {
+                // 如果在清單模式，直接過濾清單
+                renderListView(input);
+            } else {
+                // 地圖模式下，顯示下拉選單
+                resultBox.innerHTML = '';
+                let count = 0;
+                Object.keys(mapData).forEach(tId => {
+                    const d = mapData[tId];
+                    const checkAdd = (name, lat, lng, itemId) => {
+                        if (name.includes(input) || d.name.includes(input)) {
+                            count++;
+                            resultBox.innerHTML += `
+                                <div class="px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700 last:border-0" onclick="jumpToMap('${tId}', '${itemId}', ${lat}, ${lng}, '${name}'); document.getElementById('search-results').classList.add('hidden');">
+                                    <div class="text-xs text-cyan-400 mb-0.5">${d.name}</div>
+                                    <div class="text-white font-medium">${name}</div>
+                                </div>
+                            `;
+                        }
+                    };
+                    checkAdd(d.office.name, d.office.lat, d.office.lng, `${tId}_office`);
+                    d.routes.forEach(r => checkAdd(r.name, r.start[0], r.start[1], `${tId}_route_${r.id}`));
+                    checkAdd(d.restaurant.name, d.restaurant.lat, d.restaurant.lng, `${tId}_restaurant`);
+                });
+                
+                if (count > 0) resultBox.classList.remove('hidden');
+                else {
+                    resultBox.innerHTML = '<div class="px-4 py-3 text-slate-500 text-sm">無符合結果</div>';
+                    resultBox.classList.remove('hidden');
+                }
+            }
+        }
+
+        // --- 9. 初始化與密碼登入 ---
         const SYSTEM_PASSWORD = "54004658"; 
 
         function checkPassword() {
@@ -699,15 +676,23 @@
             const errorMsg = document.getElementById('pwd-error');
             
             if (input === SYSTEM_PASSWORD) {
-                // 密碼正確：隱藏錯誤訊息，淡出登入畫面
                 errorMsg.style.opacity = '0';
                 const loginScreen = document.getElementById('login-screen');
                 loginScreen.style.opacity = '0';
-                setTimeout(() => {
-                    loginScreen.style.display = 'none';
-                }, 500);
+                
+                // 檢查是否顯示 PWA 提示 (第一次登入且未加到桌面時)
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+                if (!isStandalone && !localStorage.getItem('pwa_prompt_shown')) {
+                    setTimeout(() => {
+                        const prompt = document.getElementById('pwa-prompt');
+                        prompt.classList.remove('hidden');
+                        setTimeout(() => prompt.classList.remove('translate-y-[-150%]'), 100);
+                        localStorage.setItem('pwa_prompt_shown', 'true');
+                    }, 2000);
+                }
+
+                setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
             } else {
-                // 密碼錯誤：顯示錯誤訊息並清空輸入框
                 errorMsg.style.opacity = '1';
                 document.getElementById('pwd-input').value = '';
             }
@@ -715,23 +700,47 @@
 
         window.onload = () => {
             initMap();
-            initMenu();
             
-            // 預設載入第一個鄉鎮 (草屯鎮)
+            const selector = document.getElementById('township-selector');
+            Object.keys(mapData).forEach((id, index) => {
+                const btn = document.createElement('button');
+                btn.dataset.id = id;
+                btn.innerText = mapData[id].name;
+                btn.onclick = () => loadTownship(id);
+                selector.appendChild(btn);
+            });
+            
             loadTownship(Object.keys(mapData)[0]);
 
-            // 支援手機或電腦按 Enter 鍵直接登入
             document.getElementById('pwd-input').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') checkPassword();
             });
 
-            // 移除歡迎頁動畫，露出下方的登入畫面
             setTimeout(() => {
                 const splash = document.getElementById('splash-screen');
                 splash.style.opacity = '0';
-                splash.style.visibility = 'hidden';
-            }, 2000); // 2秒後淡出
+                setTimeout(() => splash.style.display = 'none', 500);
+            }, 1500);
         };
+        
+        // --- 10. GPS 精準定位功能 ---
+        function locateUser() {
+            const btnIcon = document.querySelector('#locate-btn i');
+            btnIcon.className = "ph ph-spinner animate-spin text-2xl text-amber-400"; 
+            if (!navigator.geolocation) return alert("您的瀏覽器不支援地理定位功能！");
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude; const lng = position.coords.longitude;
+                    if (userMarker) map.removeLayer(userMarker);
+                    userMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'custom-user-icon', html: `<div class="relative"><div class="user-pulse"></div><div class="user-location-marker"></div></div>`, iconSize: [16, 16], iconAnchor: [8, 8] }), zIndexOffset: 1000 }).addTo(map);
+                    userMarker.bindTooltip('<span class="text-blue-300 font-bold">📍 我的位置</span>', { permanent: true, direction: 'top', className: 'glass-tooltip', offset: [0, -10] });
+                    map.flyTo([lat, lng], 16, { animate: true, duration: 1.5 });
+                    btnIcon.className = "ph-fill ph-crosshair text-2xl text-cyan-400"; 
+                },
+                (error) => { alert("無法獲取位置！請開啟 GPS 與權限。"); btnIcon.className = "ph-fill ph-crosshair text-2xl text-cyan-400"; },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
     </script>
 </body>
 </html>
