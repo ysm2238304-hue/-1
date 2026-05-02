@@ -408,9 +408,9 @@
             
             document.querySelectorAll('.township-btn').forEach(btn => {
                 if(btn.dataset.id === id) {
-                    btn.className = 'township-btn whitespace-nowrap px-4 py-2 rounded-full border text-sm font-medium transition-all backdrop-blur-md shadow-lg bg-cyan-600 border-cyan-400 text-white';
+                    btn.className = 'township-btn shrink-0 whitespace-nowrap px-4 py-2 rounded-full border text-sm font-medium transition-all backdrop-blur-md shadow-lg bg-cyan-600 border-cyan-400 text-white';
                 } else {
-                    btn.className = 'township-btn whitespace-nowrap px-4 py-2 rounded-full border text-sm font-medium transition-all backdrop-blur-md shadow-lg bg-slate-800/50 border-slate-600 text-slate-300';
+                    btn.className = 'township-btn shrink-0 whitespace-nowrap px-4 py-2 rounded-full border text-sm font-medium transition-all backdrop-blur-md shadow-lg bg-slate-800/50 border-slate-600 text-slate-300';
                 }
             });
 
@@ -691,7 +691,13 @@
                     }, 2000);
                 }
 
-                setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
+                setTimeout(() => { 
+                    loginScreen.style.display = 'none'; 
+                    
+                    // 強制重新計算地圖尺寸，解決地圖卡住無法拖曳的問題
+                    map.invalidateSize();
+                    if (currentBounds) map.fitBounds(currentBounds);
+                }, 500);
             } else {
                 errorMsg.style.opacity = '1';
                 document.getElementById('pwd-input').value = '';
@@ -705,6 +711,10 @@
             Object.keys(mapData).forEach((id, index) => {
                 const btn = document.createElement('button');
                 btn.dataset.id = id;
+                
+                // 確保 CSS 設定按鈕不被擠壓 (shrink-0)
+                btn.className = `township-btn shrink-0 whitespace-nowrap px-4 py-2 rounded-full border text-sm font-medium transition-all backdrop-blur-md shadow-lg ${index === 0 ? 'bg-cyan-600 border-cyan-400 text-white' : 'bg-slate-800/50 border-slate-600 text-slate-300'}`;
+                
                 btn.innerText = mapData[id].name;
                 btn.onclick = () => loadTownship(id);
                 selector.appendChild(btn);
