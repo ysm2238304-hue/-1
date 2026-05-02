@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -73,7 +73,7 @@
 
         /* 地圖控制元件樣式覆寫 */
         .leaflet-control-attribution { display: none !important; }
-        .leaflet-control-zoom { border: none !important; margin-top: 180px !important; }
+        .leaflet-control-zoom { border: none !important; margin-top: 220px !important; }
         .leaflet-bar a { 
             background-color: rgba(30, 41, 59, 0.8) !important; 
             color: #06b6d4 !important; 
@@ -128,6 +128,11 @@
         @keyframes user-ping { 
             75%, 100% { transform: scale(2); opacity: 0; } 
         }
+
+        /* 針對 iOS 狀態列安全區域設計的頂部 Padding */
+        .safe-top-padding {
+            padding-top: max(1.5rem, env(safe-area-inset-top));
+        }
     </style>
 </head>
 <body class="w-screen h-screen relative">
@@ -175,7 +180,7 @@
     <div id="map" class="absolute inset-0 z-0"></div>
 
     <!-- 2.5 清單模式 (List View) -->
-    <div id="list-view" class="absolute inset-0 z-[5] bg-slate-950 overflow-y-auto hidden pt-[170px] pb-10 px-4">
+    <div id="list-view" class="absolute inset-0 z-[5] bg-slate-950 overflow-y-auto hidden pt-[200px] pb-10 px-4">
         <h3 class="text-lg font-bold text-cyan-400 mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
             <i class="ph-fill ph-list-bullets"></i> 今日行程清單
         </h3>
@@ -188,9 +193,10 @@
     <div id="ui-layer" class="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between">
         
         <!-- 頂部：搜尋、進度、橫向浮動鄉鎮選單 -->
-        <div class="pointer-events-auto w-full pt-4 px-4 pb-3 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent">
+        <!-- ★ 修正：加入 safe-top-padding 讓上方避開 iPhone 瀏海與狀態列，防止選單無法點擊 ★ -->
+        <div class="pointer-events-auto w-full safe-top-padding px-4 pb-3 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent">
             
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-between mb-3 mt-4">
                 <h2 class="text-xl font-bold flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
                     <i class="ph-fill ph-target text-cyan-400"></i>
                     <span id="header-title">請選擇鄉鎮</span>
@@ -247,12 +253,13 @@
                 <div class="mb-5 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
                     <div class="flex justify-between items-center mb-3">
                         <h4 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="ph-fill ph-camera text-cyan-400"></i> 現場照片紀錄
+                            <i class="ph-fill ph-camera text-cyan-400"></i> 照片上傳區
                         </h4>
                         
+                        <!-- ★ 修正：拿掉 capture="environment"，支援手機相簿多圖上傳與相機拍攝 ★ -->
                         <label class="bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold py-1.5 px-3 rounded-lg flex items-center gap-1 cursor-pointer transition-colors shadow-lg">
-                            <i class="ph ph-plus-circle text-base"></i> 新增/拍攝
-                            <input type="file" accept="image/*" multiple capture="environment" class="hidden" onchange="handlePhotoUpload(event)">
+                            <i class="ph ph-plus-circle text-base"></i> 上傳/拍攝
+                            <input type="file" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload(event)">
                         </label>
                     </div>
                     
@@ -284,10 +291,10 @@
          JavaScript 詳細設定與核心邏輯 
          ========================================== -->
     <script>
-        // 🚨 更新：您的 Web App URL 🚨
+        // 🚨 GAS 接收端網址 🚨
         const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkClBmpcbfVL62Fyt0cDv3vzSF8ygo6_pMQtm6x2cCSiUGi3qaRLJ9i6ZKo-rcn9r2/exec"; 
         
-        // 🚨 更新：新的系統密碼 🚨
+        // 🚨 系統密碼 🚨
         const SYSTEM_PASSWORD = "54004658";
 
         // --- 完整 13 鄉鎮市資料庫 (精準展開排列，易於維護) ---
