@@ -27,32 +27,107 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
 
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #020617; color: #f8fafc; overflow: hidden; margin: 0; padding: 0; touch-action: pan-x pan-y; }
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; 
+            background-color: #020617; 
+            color: #f8fafc; 
+            overflow: hidden; 
+            margin: 0; 
+            padding: 0; 
+            touch-action: pan-x pan-y; 
+        }
 
-        .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .glass-panel { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5); }
+        .glass { 
+            background: rgba(15, 23, 42, 0.75); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+        }
+        
+        .glass-panel { 
+            background: rgba(30, 41, 59, 0.95); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px); 
+            border-top: 1px solid rgba(255, 255, 255, 0.15); 
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5); 
+        }
 
-        #splash-screen, #login-screen { transition: opacity 0.5s ease-in-out; }
-        .pulse-ring { animation: pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1); }
-        @keyframes pulse { 0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); } 100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } }
+        /* 歡迎頁與登入頁動畫過渡效果 */
+        #splash-screen { 
+            transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out; 
+        }
+        
+        #login-screen { 
+            transition: opacity 0.5s ease-in-out; 
+        }
+        
+        .pulse-ring { 
+            animation: pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1); 
+        }
+        
+        @keyframes pulse { 
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); } 
+            70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); } 
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } 
+        }
 
+        /* 地圖控制元件樣式覆寫 */
         .leaflet-control-attribution { display: none !important; }
         .leaflet-control-zoom { border: none !important; margin-top: 180px !important; }
-        .leaflet-bar a { background-color: rgba(30, 41, 59, 0.8) !important; color: #06b6d4 !important; border-color: rgba(255,255,255,0.1) !important;}
+        .leaflet-bar a { 
+            background-color: rgba(30, 41, 59, 0.8) !important; 
+            color: #06b6d4 !important; 
+            border-color: rgba(255,255,255,0.1) !important;
+        }
 
         .bottom-sheet { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .bottom-sheet.hidden-sheet { transform: translateY(100%); }
 
-        /* 隱藏滾動條但保留功能 */
+        /* 隱藏滾動條但保留橫向捲動功能 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .glass-tooltip { background: rgba(15, 23, 42, 0.85) !important; backdrop-filter: blur(4px) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; color: #f8fafc !important; border-radius: 8px !important; padding: 5px 10px !important; font-size: 12px !important; font-weight: 500 !important; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important; white-space: nowrap !important; }
-        .hide-tooltips .glass-tooltip { opacity: 0 !important; visibility: hidden !important; transition: opacity 0.3s ease; }
+        .glass-tooltip { 
+            background: rgba(15, 23, 42, 0.85) !important; 
+            backdrop-filter: blur(4px) !important; 
+            border: 1px solid rgba(255, 255, 255, 0.15) !important; 
+            color: #f8fafc !important; 
+            border-radius: 8px !important; 
+            padding: 5px 10px !important; 
+            font-size: 12px !important; 
+            font-weight: 500 !important; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important; 
+            white-space: nowrap !important; 
+        }
         
-        .user-location-marker { background-color: #3b82f6; border: 2px solid white; border-radius: 50%; width: 16px; height: 16px; box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); position: relative; z-index: 1000; }
-        .user-pulse { position: absolute; top: -8px; left: -8px; width: 32px; height: 32px; background-color: rgba(59, 130, 246, 0.6); border-radius: 50%; animation: user-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
-        @keyframes user-ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+        .hide-tooltips .glass-tooltip { 
+            opacity: 0 !important; 
+            visibility: hidden !important; 
+            transition: opacity 0.3s ease; 
+        }
+        
+        /* 使用者定位圖示動畫 */
+        .user-location-marker { 
+            background-color: #3b82f6; 
+            border: 2px solid white; 
+            border-radius: 50%; 
+            width: 16px; 
+            height: 16px; 
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); 
+            position: relative; 
+            z-index: 1000; 
+        }
+        .user-pulse { 
+            position: absolute; 
+            top: -8px; left: -8px; 
+            width: 32px; height: 32px; 
+            background-color: rgba(59, 130, 246, 0.6); 
+            border-radius: 50%; 
+            animation: user-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; 
+        }
+        @keyframes user-ping { 
+            75%, 100% { transform: scale(2); opacity: 0; } 
+        }
     </style>
 </head>
 <body class="w-screen h-screen relative">
@@ -64,7 +139,7 @@
             <i class="ph ph-map-pin-line text-6xl text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]"></i>
         </div>
         <h1 class="text-3xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-2">清潔考核系統</h1>
-        <p class="text-slate-400 tracking-widest text-sm uppercase">Smart Inspection System</p>
+        <p class="text-slate-400 tracking-widest text-sm uppercase">Smart Inspection Map System</p>
         <div class="mt-12 text-cyan-500/50 text-sm animate-pulse">系統載入中 System Loading...</div>
     </div>
 
@@ -91,7 +166,9 @@
             <h4 class="font-bold mb-1">將系統加入主畫面</h4>
             <p class="text-sm opacity-90 leading-tight">點擊瀏覽器下方的「分享」按鈕，選擇「加入主畫面」，即可像 App 一樣全螢幕使用！</p>
         </div>
-        <button onclick="document.getElementById('pwa-prompt').classList.add('hidden')" class="text-white opacity-70 hover:opacity-100"><i class="ph ph-x text-lg"></i></button>
+        <button onclick="document.getElementById('pwa-prompt').classList.add('hidden')" class="text-white opacity-70 hover:opacity-100">
+            <i class="ph ph-x text-lg"></i>
+        </button>
     </div>
 
     <!-- 2. 主畫面 (地圖容器) -->
@@ -99,7 +176,9 @@
 
     <!-- 2.5 清單模式 (List View) -->
     <div id="list-view" class="absolute inset-0 z-[5] bg-slate-950 overflow-y-auto hidden pt-[170px] pb-10 px-4">
-        <h3 class="text-lg font-bold text-cyan-400 mb-4 flex items-center gap-2 border-b border-slate-800 pb-2"><i class="ph-fill ph-list-bullets"></i> 今日行程清單</h3>
+        <h3 class="text-lg font-bold text-cyan-400 mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
+            <i class="ph-fill ph-list-bullets"></i> 今日行程清單
+        </h3>
         <div id="list-container" class="flex flex-col gap-3">
             <!-- JavaScript 動態生成清單 -->
         </div>
@@ -108,7 +187,7 @@
     <!-- 3. UI 覆蓋層 (頂部與底部) -->
     <div id="ui-layer" class="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between">
         
-        <!-- 頂部：搜尋、進度、浮動鄉鎮選單 -->
+        <!-- 頂部：搜尋、進度、橫向浮動鄉鎮選單 -->
         <div class="pointer-events-auto w-full pt-4 px-4 pb-3 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent">
             
             <div class="flex items-center justify-between mb-3">
@@ -133,7 +212,7 @@
                 <div id="search-results" class="absolute top-full left-0 right-0 mt-1 bg-slate-800 rounded-xl shadow-2xl z-[50] hidden max-h-48 overflow-y-auto border border-slate-700"></div>
             </div>
             
-            <!-- ★ 完美還原的 13鄉鎮市橫向浮動按鈕 (加上 shrink-0 防擠壓) ★ -->
+            <!-- 13鄉鎮市橫向浮動按鈕 -->
             <div class="flex gap-3 overflow-x-auto no-scrollbar py-2 mb-2 w-full" id="township-selector">
                 <!-- JavaScript 動態生成按鈕 -->
             </div>
@@ -164,14 +243,15 @@
                 </div>
                 <p class="text-sm text-slate-400 mb-5" id="sheet-desc">詳細資訊</p>
                 
-                <!-- 📷 現場拍照與多圖上傳區塊 -->
+                <!-- 現場拍照與多圖上傳區塊 -->
                 <div class="mb-5 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
                     <div class="flex justify-between items-center mb-3">
-                        <h4 class="text-sm font-bold text-slate-300 flex items-center gap-2"><i class="ph-fill ph-camera text-cyan-400"></i> 現場照片紀錄</h4>
+                        <h4 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <i class="ph-fill ph-camera text-cyan-400"></i> 現場照片紀錄
+                        </h4>
                         
                         <label class="bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold py-1.5 px-3 rounded-lg flex items-center gap-1 cursor-pointer transition-colors shadow-lg">
                             <i class="ph ph-plus-circle text-base"></i> 新增/拍攝
-                            <!-- accept="image/*" 允許拍照與選圖，multiple 支援多選 -->
                             <input type="file" accept="image/*" multiple capture="environment" class="hidden" onchange="handlePhotoUpload(event)">
                         </label>
                     </div>
@@ -181,7 +261,7 @@
                         <!-- JS 動態生成縮圖 -->
                     </div>
 
-                    <!-- ☁️ 雲端上傳按鈕 -->
+                    <!-- 雲端上傳按鈕 -->
                     <button id="btn-upload-drive" onclick="uploadPhotosToDrive()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-sm font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors mt-2">
                         <i class="ph-fill ph-cloud-arrow-up text-lg text-fuchsia-400"></i> 一鍵同步至 Google Drive
                     </button>
@@ -204,27 +284,144 @@
          JavaScript 詳細設定與核心邏輯 
          ========================================== -->
     <script>
-        // 🚨 步驟 1：請在此處貼上您透過 Apps Script 部署取得的 Web App 網址 🚨
-        const GOOGLE_APP_SCRIPT_URL = "在此處貼上您的_Web_App_URL"; 
+        // 🚨 更新：您的 Web App URL 🚨
+        const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkClBmpcbfVL62Fyt0cDv3vzSF8ygo6_pMQtm6x2cCSiUGi3qaRLJ9i6ZKo-rcn9r2/exec"; 
         
-        // 系統密碼設定
-        const SYSTEM_PASSWORD = "888";
+        // 🚨 更新：新的系統密碼 🚨
+        const SYSTEM_PASSWORD = "54004658";
 
-        // --- 完整 13 鄉鎮市資料庫 (精準 100% 座標) ---
+        // --- 完整 13 鄉鎮市資料庫 (精準展開排列，易於維護) ---
         const mapData = {
-            "caotun": { name: "草屯鎮", office: { name: "草屯鎮公所", lat: 23.973684, lng: 120.680282, type: "office" }, restaurant: { name: "考核聚餐餐廳 (草屯)", lat: 23.975684, lng: 120.682282, type: "restaurant" }, routes: [{ id: 1, name: "中山里", start: [23.973648, 120.681481], end: [23.973602, 120.681703], color: "#06b6d4" }, { id: 2, name: "玉峰里", start: [23.982071, 120.688176], end: [23.982253, 120.688044], color: "#d946ef" }, { id: 3, name: "新豐里", start: [23.994150, 120.686715], end: [23.995208, 120.681747], color: "#84cc16" }] },
-            "shuili": { name: "水里鄉", office: { name: "水里鄉公所", lat: 23.811399, lng: 120.856085, type: "office" }, restaurant: { name: "考核聚餐餐廳 (水里)", lat: 23.813399, lng: 120.858085, type: "restaurant" }, routes: [{ id: 1, name: "北埔村", start: [23.810806, 120.852890], end: [23.810731, 120.852545], color: "#06b6d4" }, { id: 2, name: "車埕村", start: [23.833879, 120.867565], end: [23.831322, 120.866498], color: "#d946ef" }, { id: 3, name: "農富村", start: [23.821007, 120.856731], end: [23.819186, 120.855775], color: "#84cc16" }] },
-            "mingjian": { name: "名間鄉", office: { name: "名間鄉公所", lat: 23.838216, lng: 120.702985, type: "office" }, restaurant: { name: "考核聚餐餐廳 (名間)", lat: 23.840216, lng: 120.704985, type: "restaurant" }, routes: [{ id: 1, name: "萬丹社區", start: [23.882604, 120.706387], end: [23.881798, 120.708314], color: "#06b6d4" }, { id: 2, name: "東仁社區", start: [23.865709, 120.698917], end: [23.864883, 120.700222], color: "#d946ef" }, { id: 3, name: "仁和社區", start: [23.856127, 120.705444], end: [23.853285, 120.704537], color: "#84cc16" }] },
-            "zhushan": { name: "竹山鎮", office: { name: "竹山鎮公所", lat: 23.757864, lng: 120.671700, type: "office" }, restaurant: { name: "考核聚餐餐廳 (竹山)", lat: 23.759864, lng: 120.673700, type: "restaurant" }, routes: [{ id: 1, name: "竹山里", start: [23.756848, 120.685829], end: [23.758011, 120.686582], color: "#06b6d4" }, { id: 2, name: "中正里", start: [23.754191, 120.686499], end: [23.753330, 120.685242], color: "#d946ef" }, { id: 3, name: "中山里", start: [23.752871, 120.683013], end: [23.750092, 120.683211], color: "#84cc16" }] },
-            "xinyi": { name: "信義鄉", office: { name: "信義鄉公所", lat: 23.696797, lng: 120.854557, type: "office" }, restaurant: { name: "考核聚餐餐廳 (信義)", lat: 23.698797, lng: 120.856557, type: "restaurant" }, routes: [{ id: 1, name: "人和村", start: [23.781937, 120.895508], end: [23.778942, 120.896535], color: "#06b6d4" }, { id: 2, name: "潭南村", start: [23.821406, 120.939647], end: [23.821096, 120.940643], color: "#d946ef" }, { id: 3, name: "雙龍村", start: [23.785161, 120.950123], end: [23.784965, 120.947304], color: "#84cc16" }] },
-            "nantou": { name: "南投市", office: { name: "南投市公所", lat: 23.911491, lng: 120.687156, type: "office" }, restaurant: { name: "考核聚餐餐廳 (南投)", lat: 23.913491, lng: 120.689156, type: "restaurant" }, routes: [{ id: 1, name: "內轆社區", start: [23.931513, 120.691744], end: [23.928769, 120.691873], color: "#06b6d4" }, { id: 2, name: "慈慧善行", start: [23.913359, 120.693058], end: [23.915160, 120.692432], color: "#d946ef" }, { id: 3, name: "嘉興社區", start: [23.890042, 120.689534], end: [23.889007, 120.691677], color: "#84cc16" }] },
-            "puli": { name: "埔里鎮", office: { name: "埔里鎮公所", lat: 23.966538, lng: 120.969181, type: "office" }, restaurant: { name: "考核聚餐餐廳 (埔里)", lat: 23.968538, lng: 120.971181, type: "restaurant" }, routes: [{ id: 1, name: "同聲里", start: [23.959005, 120.965108], end: [23.957434, 120.968512], color: "#06b6d4" }, { id: 2, name: "珠格里", start: [23.946445, 120.956933], end: [23.942403, 120.958233], color: "#d946ef" }, { id: 3, name: "溪南里", start: [23.952208, 120.956484], end: [23.948679, 120.956555], color: "#84cc16" }] },
-            "guoxing": { name: "國姓鄉", office: { name: "國姓鄉公所", lat: 24.040019, lng: 120.857519, type: "office" }, restaurant: { name: "考核聚餐餐廳 (國姓)", lat: 24.042019, lng: 120.859519, type: "restaurant" }, routes: [{ id: 1, name: "北港村", start: [24.056492, 120.886570], end: [24.061758, 120.888721], color: "#06b6d4" }, { id: 2, name: "石門村", start: [24.042759, 120.858486], end: [24.042845, 120.861703], color: "#d946ef" }, { id: 3, name: "國姓社區", start: [24.037842, 120.854552], end: [24.034491, 120.855023], color: "#84cc16" }] },
-            "yuchi": { name: "魚池鄉", office: { name: "魚池鄉公所", lat: 23.895785, lng: 120.935685, type: "office" }, restaurant: { name: "考核聚餐餐廳 (魚池)", lat: 23.897785, lng: 120.937685, type: "restaurant" }, routes: [{ id: 1, name: "東池村", start: [23.895302, 120.944407], end: [23.895137, 120.946363], color: "#06b6d4" }, { id: 2, name: "養靈社區", start: [23.903436, 120.916756], end: [23.903411, 120.916971], color: "#d946ef" }, { id: 3, name: "澀水社區", start: [23.921918, 120.916919], end: [23.922746, 120.918622], color: "#84cc16" }] },
-            "lugu": { name: "鹿谷鄉", office: { name: "鹿谷鄉公所", lat: 23.745979, lng: 120.753454, type: "office" }, restaurant: { name: "考核聚餐餐廳 (鹿谷)", lat: 23.747979, lng: 120.755454, type: "restaurant" }, routes: [{ id: 1, name: "竹林村", start: [23.723111, 120.759689], end: [23.725841, 120.758015], color: "#06b6d4" }, { id: 2, name: "竹豐村", start: [23.731889, 120.749889], end: [23.733190, 120.747984], color: "#d946ef" }, { id: 3, name: "永隆村", start: [23.753367, 120.774639], end: [23.754037, 120.774393], color: "#84cc16" }] },
-            "jiji": { name: "集集鎮", office: { name: "集集鎮公所", lat: 23.828368, lng: 120.786489, type: "office" }, restaurant: { name: "考核聚餐餐廳 (集集)", lat: 23.830368, lng: 120.788489, type: "restaurant" }, routes: [{ id: 1, name: "田寮里", start: [23.836148, 120.750473], end: [23.834490, 120.750903], color: "#06b6d4" }, { id: 2, name: "集集社區", start: [23.830527, 120.783863], end: [23.829727, 120.782989], color: "#d946ef" }, { id: 3, name: "吳厝里", start: [23.828143, 120.787825], end: [23.826663, 120.788948], color: "#84cc16" }] },
-            "zhongliao": { name: "中寮鄉", office: { name: "中寮鄉公所", lat: 23.879003, lng: 120.766098, type: "office" }, restaurant: { name: "考核聚餐餐廳 (中寮)", lat: 23.881003, lng: 120.768098, type: "restaurant" }, routes: [{ id: 1, name: "永芳村", start: [23.930901, 120.743570], end: [23.931247, 120.747089], color: "#06b6d4" }, { id: 2, name: "清水村", start: [23.945351, 120.788934], end: [23.944242, 120.790283], color: "#d946ef" }, { id: 3, name: "龍岩村", start: [23.933321, 120.758229], end: [23.935202, 120.758507], color: "#84cc16" }] },
-            "renai": { name: "仁愛鄉", office: { name: "仁愛鄉公所", lat: 24.021544, lng: 121.132062, type: "office" }, restaurant: { name: "考核聚餐餐廳 (仁愛)", lat: 24.023544, lng: 121.134062, type: "restaurant" }, routes: [{ id: 1, name: "幼獅道班", start: [24.047794, 121.156327], end: [24.046639, 121.155915], color: "#06b6d4" }, { id: 2, name: "博望新村", start: [24.074991, 121.170174], end: [24.075177, 121.171519], color: "#d946ef" }, { id: 3, name: "壽亭新村", start: [24.041546, 121.160913], end: [24.041602, 121.160722], color: "#84cc16" }] }
+            "caotun": { 
+                name: "草屯鎮", 
+                office: { name: "草屯鎮公所", lat: 23.973684, lng: 120.680282, type: "office" }, 
+                restaurant: { name: "考核聚餐餐廳 (草屯)", lat: 23.975684, lng: 120.682282, type: "restaurant" }, 
+                routes: [
+                    { id: 1, name: "中山里", start: [23.973648, 120.681481], end: [23.973602, 120.681703], color: "#06b6d4" }, 
+                    { id: 2, name: "玉峰里", start: [23.982071, 120.688176], end: [23.982253, 120.688044], color: "#d946ef" }, 
+                    { id: 3, name: "新豐里", start: [23.994150, 120.686715], end: [23.995208, 120.681747], color: "#84cc16" }
+                ] 
+            },
+            "shuili": { 
+                name: "水里鄉", 
+                office: { name: "水里鄉公所", lat: 23.811399, lng: 120.856085, type: "office" }, 
+                restaurant: { name: "考核聚餐餐廳 (水里)", lat: 23.813399, lng: 120.858085, type: "restaurant" }, 
+                routes: [
+                    { id: 1, name: "北埔村", start: [23.810806, 120.852890], end: [23.810731, 120.852545], color: "#06b6d4" }, 
+                    { id: 2, name: "車埕村", start: [23.833879, 120.867565], end: [23.831322, 120.866498], color: "#d946ef" }, 
+                    { id: 3, name: "農富村", start: [23.821007, 120.856731], end: [23.819186, 120.855775], color: "#84cc16" }
+                ] 
+            },
+            "mingjian": { 
+                name: "名間鄉", 
+                office: { name: "名間鄉公所", lat: 23.838216, lng: 120.702985, type: "office" }, 
+                restaurant: { name: "考核聚餐餐廳 (名間)", lat: 23.840216, lng: 120.704985, type: "restaurant" }, 
+                routes: [
+                    { id: 1, name: "萬丹社區", start: [23.882604, 120.706387], end: [23.881798, 120.708314], color: "#06b6d4" }, 
+                    { id: 2, name: "東仁社區", start: [23.865709, 120.698917], end: [23.864883, 120.700222], color: "#d946ef" }, 
+                    { id: 3, name: "仁和社區", start: [23.856127, 120.705444], end: [23.853285, 120.704537], color: "#84cc16" }
+                ] 
+            },
+            "zhushan": { 
+                name: "竹山鎮", 
+                office: { name: "竹山鎮公所", lat: 23.757864, lng: 120.671700, type: "office" }, 
+                restaurant: { name: "考核聚餐餐廳 (竹山)", lat: 23.759864, lng: 120.673700, type: "restaurant" }, 
+                routes: [
+                    { id: 1, name: "竹山里", start: [23.756848, 120.685829], end: [23.758011, 120.686582], color: "#06b6d4" }, 
+                    { id: 2, name: "中正里", start: [23.754191, 120.686499], end: [23.753330, 120.685242], color: "#d946ef" }, 
+                    { id: 3, name: "中山里", start: [23.752871, 120.683013], end: [23.750092, 120.683211], color: "#84cc16" }
+                ] 
+            },
+            "xinyi": { 
+                name: "信義鄉", 
+                office: { name: "信義鄉公所", lat: 23.696797, lng: 120.854557, type: "office" }, 
+                restaurant: { name: "考核聚餐餐廳 (信義)", lat: 23.698797, lng: 120.856557, type: "restaurant" }, 
+                routes: [
+                    { id: 1, name: "人和村", start: [23.781937, 120.895508], end: [23.778942, 120.896535], color: "#06b6d4" }, 
+                    { id: 2, name: "潭南村", start: [23.821406, 120.939647], end: [23.821096, 120.940643], color: "#d946ef" }, 
+                    { id: 3, name: "雙龍村", start: [23.785161, 120.950123], end: [23.784965, 120.947304], color: "#84cc16" }
+                ] 
+            },
+            "nantou": { 
+                name: "南投市", 
+                office: { name: "南投市公所", lat: 23.911491, lng: 120.687156, type: "office" }, 
+                restaurant: { name: "考核聚餐餐廳 (南投)", lat: 23.913491, lng: 120.689156, type: "restaurant" }, 
+                routes: [
+                    { id: 1, name: "內轆社區", start: [23.931513, 120.691744], end: [23.928769, 120.691873], color: "#06b6d4" }, 
+                    { id: 2, name: "慈慧善行", start: [23.913359, 120.693058], end: [23.915160, 120.692432], color: "#d946ef" }, 
+                    { id: 3, name: "嘉興社區", start: [23.890042, 120.689534], end: [23.889007, 120.691677], color: "#84cc16" }
+                ] 
+            },
+            "puli": { 
+                name: "埔里鎮", 
+                office: { name: "埔里鎮公所", lat: 23.966538, lng: 120.969181, type: "office" }, 
+                restaurant: { name: "考核聚餐餐廳 (埔里)", lat: 23.968538, lng: 120.971181, type: "restaurant" }, 
+                routes: [
+                    { id: 1, name: "同聲里", start: [23.959005, 120.965108], end: [23.957434, 120.968512], color: "#06b6d4" }, 
+                    { id: 2, name: "珠格里", start: [23.946445, 120.956933], end: [23.942403, 120.958233], color: "#d946ef" }, 
+                    { id: 3, name: "溪南里", start: [23.952208, 120.956484], end: [23.948679, 120.956555], color: "#84cc16" }
+                ] 
+            },
+            "guoxing": { 
+                name: "國姓鄉", 
+                office: { name: "國姓鄉公所", lat: 24.040019, lng: 120.857519, type: "office" }, 
+                restaurant: { name: "考核聚餐餐廳 (國姓)", lat: 24.042019, lng: 120.859519, type: "restaurant" }, 
+                routes: [
+                    { id: 1, name: "北港村", start: [24.056492, 120.886570], end: [24.061758, 120.888721], color: "#06b6d4" }, 
+                    { id: 2, name: "石門村", start: [24.042759, 120.858486], end: [24.042845, 120.861703], color: "#d946ef" }, 
+                    { id: 3, name: "國姓社區", start: [24.037842, 120.854552], end: [24.034491, 120.855023], color: "#84cc16" }
+                ] 
+            },
+            "yuchi": { 
+                name: "魚池鄉", 
+                office: { name: "魚池鄉公所", lat: 23.895785, lng: 120.935685, type: "office" }, 
+                restaurant: { name: "考核聚餐餐廳 (魚池)", lat: 23.897785, lng: 120.937685, type: "restaurant" }, 
+                routes: [
+                    { id: 1, name: "東池村", start: [23.895302, 120.944407], end: [23.895137, 120.946363], color: "#06b6d4" }, 
+                    { id: 2, name: "養靈社區", start: [23.903436, 120.916756], end: [23.903411, 120.916971], color: "#d946ef" }, 
+                    { id: 3, name: "澀水社區", start: [23.921918, 120.916919], end: [23.922746, 120.918622], color: "#84cc16" }
+                ] 
+            },
+            "lugu": { 
+                name: "鹿谷鄉", 
+                office: { name: "鹿谷鄉公所", lat: 23.745979, lng: 120.753454, type: "office" }, 
+                restaurant: { name: "考核聚餐餐廳 (鹿谷)", lat: 23.747979, lng: 120.755454, type: "restaurant" }, 
+                routes: [
+                    { id: 1, name: "竹林村", start: [23.723111, 120.759689], end: [23.725841, 120.758015], color: "#06b6d4" }, 
+                    { id: 2, name: "竹豐村", start: [23.731889, 120.749889], end: [23.733190, 120.747984], color: "#d946ef" }, 
+                    { id: 3, name: "永隆村", start: [23.753367, 120.774639], end: [23.754037, 120.774393], color: "#84cc16" }
+                ] 
+            },
+            "jiji": { 
+                name: "集集鎮", 
+                office: { name: "集集鎮公所", lat: 23.828368, lng: 120.786489, type: "office" }, 
+                restaurant: { name: "考核聚餐餐廳 (集集)", lat: 23.830368, lng: 120.788489, type: "restaurant" }, 
+                routes: [
+                    { id: 1, name: "田寮里", start: [23.836148, 120.750473], end: [23.834490, 120.750903], color: "#06b6d4" }, 
+                    { id: 2, name: "集集社區", start: [23.830527, 120.783863], end: [23.829727, 120.782989], color: "#d946ef" }, 
+                    { id: 3, name: "吳厝里", start: [23.828143, 120.787825], end: [23.826663, 120.788948], color: "#84cc16" }
+                ] 
+            },
+            "zhongliao": { 
+                name: "中寮鄉", 
+                office: { name: "中寮鄉公所", lat: 23.879003, lng: 120.766098, type: "office" }, 
+                restaurant: { name: "考核聚餐餐廳 (中寮)", lat: 23.881003, lng: 120.768098, type: "restaurant" }, 
+                routes: [
+                    { id: 1, name: "永芳村", start: [23.930901, 120.743570], end: [23.931247, 120.747089], color: "#06b6d4" }, 
+                    { id: 2, name: "清水村", start: [23.945351, 120.788934], end: [23.944242, 120.790283], color: "#d946ef" }, 
+                    { id: 3, name: "龍岩村", start: [23.933321, 120.758229], end: [23.935202, 120.758507], color: "#84cc16" }
+                ] 
+            },
+            "renai": { 
+                name: "仁愛鄉", 
+                office: { name: "仁愛鄉公所", lat: 24.021544, lng: 121.132062, type: "office" }, 
+                restaurant: { name: "考核聚餐餐廳 (仁愛)", lat: 24.023544, lng: 121.134062, type: "restaurant" }, 
+                routes: [
+                    { id: 1, name: "幼獅道班", start: [24.047794, 121.156327], end: [24.046639, 121.155915], color: "#06b6d4" }, 
+                    { id: 2, name: "博望新村", start: [24.074991, 121.170174], end: [24.075177, 121.171519], color: "#d946ef" }, 
+                    { id: 3, name: "壽亭新村", start: [24.041546, 121.160913], end: [24.041602, 121.160722], color: "#84cc16" }
+                ] 
+            }
         };
 
         // --- 本機狀態保存 (進度與多張照片) ---
@@ -241,8 +438,11 @@
                 alert("手機暫存空間已滿！請點擊「一鍵同步至 Google Drive」並清除已上傳的照片。"); 
             }
             updateProgressBar();
-            if(!isListView) loadTownship(currentTownshipId); // 更新地圖顏色
-            else renderListView(); // 更新清單
+            if(!isListView) {
+                loadTownship(currentTownshipId); // 更新地圖顏色
+            } else {
+                renderListView(); // 更新清單
+            }
         }
 
         // --- 地圖初始化與控制 ---
@@ -252,14 +452,48 @@
         let userMarker = null;
         let isListView = false;
 
-        const createCustomIcon = (iconColor, iconName, opacity=1) => L.divIcon({ className: 'custom-leaflet-icon', html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" style="opacity:${opacity}"><circle cx="20" cy="20" r="18" fill="rgba(15, 23, 42, 0.8)" stroke="${iconColor}" stroke-width="2"/>${opacity === 1 ? `<circle cx="20" cy="20" r="24" fill="none" stroke="${iconColor}" stroke-width="1" opacity="0.4" class="pulse"/>` : ''}<foreignObject x="8" y="8" width="24" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display:flex; justify-content:center; align-items:center; height:100%; color:${iconColor}; font-size:18px;"><i class="${iconName}"></i></div></foreignObject></svg>`, iconSize: [40, 40], iconAnchor: [20, 20] });
-        function getIcons(isDone) { return { office: createCustomIcon(isDone ? '#64748b' : '#38bdf8', 'ph-fill ph-bank', isDone ? 0.6 : 1), restaurant: createCustomIcon(isDone ? '#64748b' : '#fbbf24', 'ph-fill ph-fork-knife', isDone ? 0.6 : 1), start: createCustomIcon(isDone ? '#64748b' : '#4ade80', 'ph-fill ph-flag-pennant', isDone ? 0.6 : 1), end: createCustomIcon(isDone ? '#64748b' : '#f87171', 'ph-fill ph-flag-checkered', isDone ? 0.6 : 1) }; }
+        function createCustomIcon(iconColor, iconName, opacity=1) {
+            return L.divIcon({ 
+                className: 'custom-leaflet-icon', 
+                html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" style="opacity:${opacity}">
+                        <circle cx="20" cy="20" r="18" fill="rgba(15, 23, 42, 0.8)" stroke="${iconColor}" stroke-width="2"/>
+                        ${opacity === 1 ? `<circle cx="20" cy="20" r="24" fill="none" stroke="${iconColor}" stroke-width="1" opacity="0.4" class="pulse"/>` : ''}
+                        <foreignObject x="8" y="8" width="24" height="24">
+                            <div xmlns="http://www.w3.org/1999/xhtml" style="display:flex; justify-content:center; align-items:center; height:100%; color:${iconColor}; font-size:18px;">
+                                <i class="${iconName}"></i>
+                            </div>
+                        </foreignObject>
+                       </svg>`, 
+                iconSize: [40, 40], 
+                iconAnchor: [20, 20] 
+            });
+        }
+
+        function getIcons(isDone) { 
+            return { 
+                office: createCustomIcon(isDone ? '#64748b' : '#38bdf8', 'ph-fill ph-bank', isDone ? 0.6 : 1), 
+                restaurant: createCustomIcon(isDone ? '#64748b' : '#fbbf24', 'ph-fill ph-fork-knife', isDone ? 0.6 : 1), 
+                start: createCustomIcon(isDone ? '#64748b' : '#4ade80', 'ph-fill ph-flag-pennant', isDone ? 0.6 : 1), 
+                end: createCustomIcon(isDone ? '#64748b' : '#f87171', 'ph-fill ph-flag-checkered', isDone ? 0.6 : 1) 
+            }; 
+        }
 
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView([23.903, 120.951], 10);
             L.control.zoom({ position: 'topright' }).addTo(map);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap', subdomains: 'abcd', maxZoom: 20 }).addTo(map);
-            map.on('zoomend', function() { document.getElementById('map').classList.toggle('hide-tooltips', map.getZoom() < 14); });
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { 
+                attribution: '&copy; OpenStreetMap', 
+                subdomains: 'abcd', 
+                maxZoom: 20 
+            }).addTo(map);
+            
+            map.on('zoomend', function() { 
+                if(map.getZoom() < 14) {
+                    document.getElementById('map').classList.add('hide-tooltips');
+                } else {
+                    document.getElementById('map').classList.remove('hide-tooltips');
+                }
+            });
         }
 
         function loadTownship(id) {
@@ -278,35 +512,59 @@
                 }
             });
 
-            activeLayers.forEach(layer => map.removeLayer(layer)); activeLayers = [];
-            hideBottomSheet(); updateProgressBar();
+            activeLayers.forEach(layer => map.removeLayer(layer)); 
+            activeLayers = [];
+            hideBottomSheet(); 
+            updateProgressBar();
 
             const bounds = [];
+            
+            // 繪製單一點位 (公所、餐廳)
             const drawPOI = (poi, itemId) => {
                 const isDone = inspectionState[itemId];
                 const marker = L.marker([poi.lat, poi.lng], { icon: getIcons(isDone)[poi.type] }).addTo(map);
-                marker.on('click', () => showBottomSheet(poi.name, `類型：${poi.type === 'office'?'鄉鎮公所':'聚餐餐廳'}`, poi.lat, poi.lng, itemId));
-                marker.bindTooltip(`<span class="${isDone?'text-slate-400':(poi.type==='office'?'text-sky-400':'text-amber-400')} font-bold">${poi.name}${isDone?' (已完成)':''}</span>`, { permanent: true, direction: 'top', className: 'glass-tooltip', offset: [0, -20] });
-                activeLayers.push(marker); bounds.push([poi.lat, poi.lng]);
+                
+                marker.on('click', () => {
+                    showBottomSheet(poi.name, `類型：${poi.type === 'office' ? '鄉鎮公所' : '聚餐餐廳'}`, poi.lat, poi.lng, itemId);
+                });
+                
+                const colorClass = isDone ? 'text-slate-400' : (poi.type === 'office' ? 'text-sky-400' : 'text-amber-400');
+                marker.bindTooltip(`<span class="${colorClass} font-bold">${poi.name}${isDone ? ' (已完成)' : ''}</span>`, { 
+                    permanent: true, direction: 'top', className: 'glass-tooltip', offset: [0, -20] 
+                });
+                
+                activeLayers.push(marker); 
+                bounds.push([poi.lat, poi.lng]);
             };
 
             drawPOI(data.office, `${id}_office`); 
             drawPOI(data.restaurant, `${id}_restaurant`);
 
+            // 繪製考核路線
             data.routes.forEach(route => {
                 const itemId = `${id}_route_${route.id}`;
                 const isDone = inspectionState[itemId];
-                const polyline = L.polyline([route.start, route.end], { color: isDone?'#475569':route.color, weight: 5, opacity: isDone?0.5:0.8, dashArray: '10, 10' }).addTo(map);
+                const routeColor = isDone ? '#475569' : route.color;
+                const opacity = isDone ? 0.5 : 0.8;
+
+                const polyline = L.polyline([route.start, route.end], { 
+                    color: routeColor, weight: 5, opacity: opacity, dashArray: '10, 10' 
+                }).addTo(map);
+                
                 const startMarker = L.marker(route.start, { icon: getIcons(isDone).start }).addTo(map);
                 const endMarker = L.marker(route.end, { icon: getIcons(isDone).end }).addTo(map);
 
-                const openSheet = () => showBottomSheet(route.name, `狀態：${isDone?'已考核':'未考核'}`, route.start[0], route.start[1], itemId);
-                polyline.on('click', openSheet); startMarker.on('click', openSheet); endMarker.on('click', openSheet);
+                const openSheet = () => showBottomSheet(route.name, `狀態：${isDone ? '已考核' : '未考核'}`, route.start[0], route.start[1], itemId);
                 
-                startMarker.bindTooltip(`<div class="${isDone?'text-slate-400':'text-green-400'} font-bold mb-0.5">🟢 起點</div><div class="text-slate-200">${route.name}</div>`, { permanent: true, direction: 'right', className: 'glass-tooltip text-center', offset: [15, 0] });
-                endMarker.bindTooltip(`<div class="${isDone?'text-slate-400':'text-red-400'} font-bold mb-0.5">🏁 終點</div><div class="text-slate-200">${route.name}</div>`, { permanent: true, direction: 'left', className: 'glass-tooltip text-center', offset: [-15, 0] });
+                polyline.on('click', openSheet); 
+                startMarker.on('click', openSheet); 
+                endMarker.on('click', openSheet);
+                
+                startMarker.bindTooltip(`<div class="${isDone ? 'text-slate-400' : 'text-green-400'} font-bold mb-0.5">🟢 起點</div><div class="text-slate-200">${route.name}</div>`, { permanent: true, direction: 'right', className: 'glass-tooltip text-center', offset: [15, 0] });
+                endMarker.bindTooltip(`<div class="${isDone ? 'text-slate-400' : 'text-red-400'} font-bold mb-0.5">🏁 終點</div><div class="text-slate-200">${route.name}</div>`, { permanent: true, direction: 'left', className: 'glass-tooltip text-center', offset: [-15, 0] });
 
-                activeLayers.push(polyline, startMarker, endMarker); bounds.push(route.start, route.end);
+                activeLayers.push(polyline, startMarker, endMarker); 
+                bounds.push(route.start, route.end);
             });
 
             currentBounds = L.latLngBounds(bounds);
@@ -319,9 +577,13 @@
             const data = mapData[currentTownshipId];
             const total = 2 + data.routes.length;
             let comp = 0;
+            
             if(inspectionState[`${currentTownshipId}_office`]) comp++;
             if(inspectionState[`${currentTownshipId}_restaurant`]) comp++;
-            data.routes.forEach(r => { if(inspectionState[`${currentTownshipId}_route_${r.id}`]) comp++; });
+            data.routes.forEach(r => { 
+                if(inspectionState[`${currentTownshipId}_route_${r.id}`]) comp++; 
+            });
+            
             const pct = Math.round((comp / total) * 100);
             document.getElementById('progress-text').innerText = `本區進度：${comp} / ${total} 點位`;
             document.getElementById('progress-percent').innerText = `${pct}%`;
@@ -342,7 +604,8 @@
 
             if (!inspectionPhotos[currentItemId]) inspectionPhotos[currentItemId] = [];
             
-            document.getElementById('photo-preview-grid').innerHTML += `<div class="col-span-3 text-center text-cyan-400 text-xs py-2" id="loading-txt"><i class="ph ph-spinner animate-spin"></i> 照片處理中...</div>`;
+            const grid = document.getElementById('photo-preview-grid');
+            grid.innerHTML += `<div class="col-span-3 text-center text-cyan-400 text-xs py-2" id="loading-txt"><i class="ph ph-spinner animate-spin"></i> 照片處理中...</div>`;
 
             let processed = 0;
             Array.from(files).forEach(file => {
@@ -353,8 +616,12 @@
                         const canvas = document.createElement('canvas');
                         const MAX_WIDTH = 800; // 壓縮寬度避免爆容量
                         let w = img.width, h = img.height;
-                        if (w > MAX_WIDTH) { h *= MAX_WIDTH / w; w = MAX_WIDTH; }
-                        canvas.width = w; canvas.height = h;
+                        if (w > MAX_WIDTH) { 
+                            h *= MAX_WIDTH / w; 
+                            w = MAX_WIDTH; 
+                        }
+                        canvas.width = w; 
+                        canvas.height = h;
                         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                         
                         inspectionPhotos[currentItemId].push({
@@ -398,7 +665,8 @@
         function deletePhoto(photoId) {
             if(!confirm("確定要刪除這張尚未上傳的照片嗎？")) return;
             inspectionPhotos[currentItemId] = inspectionPhotos[currentItemId].filter(p => p.id !== photoId);
-            saveState(); renderPhotos();
+            saveState(); 
+            renderPhotos();
         }
 
         // --- ☁️ 後端串接：同步上傳至 Google Drive ---
@@ -406,12 +674,17 @@
             const photos = inspectionPhotos[currentItemId] || [];
             const pendingPhotos = photos.filter(p => !p.uploaded);
             
-            if (pendingPhotos.length === 0) return alert("目前沒有需要上傳的新照片！\n(已打勾的照片代表已經安全存入您的雲端硬碟)");
-            if (GOOGLE_APP_SCRIPT_URL.includes("在此處貼上")) return alert("⚠️ 系統管理員尚未設定 Google Apps Script 網址！\n請按照教學設定好 GAS，再將網址貼入程式碼中。");
+            if (pendingPhotos.length === 0) {
+                return alert("目前沒有需要上傳的新照片！\n(已打勾的照片代表已經安全存入您的雲端硬碟)");
+            }
+            if (GOOGLE_APP_SCRIPT_URL.includes("在此處貼上")) {
+                return alert("⚠️ 系統管理員尚未設定 Google Apps Script 網址！\n請按照教學設定好 GAS，再將網址貼入程式碼中。");
+            }
 
             const btn = document.getElementById('btn-upload-drive');
             btn.innerHTML = '<i class="ph ph-spinner animate-spin text-lg"></i> 上傳中，請勿關閉螢幕...';
-            btn.disabled = true; btn.classList.add('opacity-50');
+            btn.disabled = true; 
+            btn.classList.add('opacity-50');
 
             const townshipName = mapData[currentTownshipId].name;
             const pointName = document.getElementById('sheet-title').innerText;
@@ -442,19 +715,27 @@
                         photos[i].uploaded = true; // 標記為已上傳
                         successCount++;
                     }
-                } catch (err) { console.error("上傳失敗", err); }
+                } catch (err) { 
+                    console.error("上傳失敗", err); 
+                }
             }
 
-            saveState(); renderPhotos();
-            btn.disabled = false; btn.classList.remove('opacity-50');
+            saveState(); 
+            renderPhotos();
+            btn.disabled = false; 
+            btn.classList.remove('opacity-50');
             btn.innerHTML = '<i class="ph-fill ph-cloud-arrow-up text-lg text-fuchsia-400"></i> 一鍵同步至 Google Drive';
 
-            if(successCount === pendingPhotos.length) alert("✅ 所有新照片已成功上傳至雲端硬碟！");
-            else alert(`⚠️ 上傳完畢。成功: ${successCount} 張，失敗: ${pendingPhotos.length - successCount} 張。\n這可能是網路不穩造成的，請稍後再試一次。`);
+            if(successCount === pendingPhotos.length) {
+                alert("✅ 所有新照片已成功上傳至雲端硬碟！");
+            } else {
+                alert(`⚠️ 上傳完畢。成功: ${successCount} 張，失敗: ${pendingPhotos.length - successCount} 張。\n這可能是網路不穩造成的，請稍後再試一次。`);
+            }
         }
 
         // --- 底部面板控制 ---
         const bottomSheet = document.getElementById('bottom-sheet');
+        
         function showBottomSheet(title, desc, lat, lng, itemId, keepNav=false) {
             currentItemId = itemId;
             document.getElementById('sheet-title').innerText = title;
@@ -462,19 +743,31 @@
             
             const isDone = inspectionState[itemId];
             const btn = document.getElementById('mark-btn');
-            btn.className = isDone ? "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-500/20 border-emerald-500 text-emerald-400" : "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-slate-800 border-slate-600 text-slate-300";
-            document.getElementById('mark-text').innerText = isDone ? "已考核" : "未考核";
+            
+            if (isDone) {
+                btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-500/20 border-emerald-500 text-emerald-400";
+                document.getElementById('mark-text').innerText = "已考核";
+            } else {
+                btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-slate-800 border-slate-600 text-slate-300";
+                document.getElementById('mark-text').innerText = "未考核";
+            }
 
             renderPhotos();
             
             const navBtn = document.getElementById('nav-btn');
             if(!keepNav) {
                 navBtn.classList.remove('hidden');
-                navBtn.onclick = () => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank'); };
+                navBtn.onclick = () => { 
+                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank'); 
+                };
             }
             bottomSheet.classList.remove('hidden-sheet');
         }
-        function hideBottomSheet() { bottomSheet.classList.add('hidden-sheet'); currentItemId = null; }
+
+        function hideBottomSheet() { 
+            bottomSheet.classList.add('hidden-sheet'); 
+            currentItemId = null; 
+        }
 
         // --- 清單模式與雙模切換 ---
         function toggleView() {
@@ -528,14 +821,20 @@
                 d.routes.forEach(r => renderItem(r.name, 'route', r.start[0], r.start[1], `${tId}_route_${r.id}`, tId));
                 renderItem(d.restaurant.name, 'restaurant', d.restaurant.lat, d.restaurant.lng, `${tId}_restaurant`, tId);
             });
-            if(container.innerHTML === '') container.innerHTML = '<p class="text-slate-500 text-center py-10">找不到符合的地點或路線</p>';
+
+            if(container.innerHTML === '') {
+                container.innerHTML = '<p class="text-slate-500 text-center py-10">找不到符合的地點或路線</p>';
+            }
         }
 
         function jumpToMap(tId, itemId, lat, lng, title) {
             if (isListView) toggleView();
             if (tId !== currentTownshipId) loadTownship(tId);
+            
             map.flyTo([lat, lng], 16, { animate: true, duration: 1 });
-            setTimeout(() => showBottomSheet(title, '從清單快速跳轉', lat, lng, itemId), 1000);
+            setTimeout(() => {
+                showBottomSheet(title, '從清單快速跳轉', lat, lng, itemId);
+            }, 1000);
         }
 
         function handleSearch() {
@@ -548,8 +847,9 @@
                 return;
             }
 
-            if (isListView) { renderListView(input); } 
-            else {
+            if (isListView) { 
+                renderListView(input); 
+            } else {
                 resultBox.innerHTML = '';
                 let count = 0;
                 Object.keys(mapData).forEach(tId => {
@@ -569,8 +869,9 @@
                     checkAdd(d.restaurant.name, d.restaurant.lat, d.restaurant.lng, `${tId}_restaurant`);
                 });
                 
-                if (count > 0) resultBox.classList.remove('hidden');
-                else {
+                if (count > 0) {
+                    resultBox.classList.remove('hidden');
+                } else {
                     resultBox.innerHTML = '<div class="px-4 py-3 text-slate-500 text-sm">無符合結果</div>';
                     resultBox.classList.remove('hidden');
                 }
@@ -579,7 +880,8 @@
 
         // --- 初始化與密碼登入 ---
         function checkPassword() {
-            if (document.getElementById('pwd-input').value === SYSTEM_PASSWORD) {
+            const inputVal = document.getElementById('pwd-input').value;
+            if (inputVal === SYSTEM_PASSWORD) {
                 document.getElementById('pwd-error').style.opacity = '0';
                 const loginScreen = document.getElementById('login-screen');
                 loginScreen.style.opacity = '0';
@@ -597,7 +899,7 @@
 
                 setTimeout(() => { 
                     loginScreen.style.display = 'none'; 
-                    // 🌟 修正地圖初始化：保證全螢幕載入，不會卡住
+                    // 🌟 保證全螢幕載入後不會卡住
                     map.invalidateSize(); 
                     if (currentBounds) map.fitBounds(currentBounds);
                 }, 500);
@@ -610,41 +912,64 @@
         window.onload = () => {
             initMap();
             
-            // ★ 生成 13 鄉鎮橫向按鈕 ★
+            // ★ 生成 13 鄉鎮橫向滑動按鈕 ★
             const selector = document.getElementById('township-selector');
             Object.keys(mapData).forEach((id, index) => {
                 const btn = document.createElement('button');
                 btn.dataset.id = id;
-                // 使用 shrink-0 防止按鈕在手機上被擠壓變形
+                
+                // 使用 shrink-0 防止按鈕被擠壓
                 btn.className = `township-btn shrink-0 whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg ${index === 0 ? 'bg-cyan-600 border border-cyan-400 text-white' : 'bg-slate-800/80 border border-slate-600 text-slate-300 backdrop-blur-md'}`;
+                
                 btn.innerText = mapData[id].name;
                 btn.onclick = () => loadTownship(id);
                 selector.appendChild(btn);
             });
             
-            loadTownship(Object.keys(mapData)[0]); // 預設草屯
+            loadTownship(Object.keys(mapData)[0]); // 預設載入草屯
 
-            document.getElementById('pwd-input').addEventListener('keypress', e => { if (e.key === 'Enter') checkPassword(); });
+            document.getElementById('pwd-input').addEventListener('keypress', e => { 
+                if (e.key === 'Enter') checkPassword(); 
+            });
+            
+            // ★ 完美保留的 2 秒科技感歡迎頁動畫 ★
             setTimeout(() => {
                 const splash = document.getElementById('splash-screen');
                 splash.style.opacity = '0';
-                setTimeout(() => splash.style.display = 'none', 500);
-            }, 1500);
+                splash.style.visibility = 'hidden';
+            }, 2000); 
         };
         
         function locateUser() {
             const btnIcon = document.querySelector('#locate-btn i');
             btnIcon.className = "ph ph-spinner animate-spin text-2xl text-amber-400"; 
-            if (!navigator.geolocation) return alert("瀏覽器不支援定位！");
+            
+            if (!navigator.geolocation) {
+                return alert("瀏覽器不支援定位功能！");
+            }
+            
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     const lat = pos.coords.latitude, lng = pos.coords.longitude;
                     if (userMarker) map.removeLayer(userMarker);
-                    userMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'custom-user-icon', html: `<div class="relative"><div class="user-pulse"></div><div class="user-location-marker"></div></div>`, iconSize: [16, 16], iconAnchor: [8, 8] }), zIndexOffset: 1000 }).addTo(map);
+                    
+                    userMarker = L.marker([lat, lng], { 
+                        icon: L.divIcon({ 
+                            className: 'custom-user-icon', 
+                            html: `<div class="relative"><div class="user-pulse"></div><div class="user-location-marker"></div></div>`, 
+                            iconSize: [16, 16], 
+                            iconAnchor: [8, 8] 
+                        }), 
+                        zIndexOffset: 1000 
+                    }).addTo(map);
+                    
                     map.flyTo([lat, lng], 16, { animate: true, duration: 1.5 });
                     btnIcon.className = "ph-fill ph-crosshair text-2xl text-cyan-400"; 
                 },
-                () => { alert("無法獲取位置！請開啟 GPS。"); btnIcon.className = "ph-fill ph-crosshair text-2xl text-cyan-400"; },
+                () => { 
+                    alert("無法獲取您的位置！請確認已開啟 GPS 與權限。"); 
+                    btnIcon.className = "ph-fill ph-crosshair text-2xl text-cyan-400"; 
+                },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         }
