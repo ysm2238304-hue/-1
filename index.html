@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>南投縣清潔考核地圖系統</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet Map CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #020617; /* Slate 950 */
+            color: #f8fafc;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            touch-action: pan-x pan-y; /* Prevent pull-to-refresh on mobile */
+        }
+
+        /* 玻璃擬物化效果 (Glassmorphism) */
+        .glass {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 歡迎頁動畫 */
+        #splash-screen {
+            transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+        }
+        .pulse-ring {
+            animation: pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+        }
+
+        /* 隱藏 Leaflet 預設的版權文字以提升介面乾淨度 (僅測試用) */
+        .leaflet-control-attribution { display: none !important; }
+        .leaflet-control-zoom { border: none !important; margin-top: 80px !important; }
+        .leaflet-bar a { background-color: rgba(30, 41, 59, 0.8) !important; color: #06b6d4 !important; border-color: rgba(255,255,255,0.1) !important;}
+
+        /* 自訂底部面板過渡動畫 */
+        .bottom-sheet {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bottom-sheet.hidden-sheet {
+            transform: translateY(100%);
+        }
+
+        /* 滾動條隱藏 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* 路線顏色定義 */
+        .route-1-color { color: #06b6d4; } /* Cyan */
+        .route-2-color { color: #d946ef; } /* Fuchsia */
+        .route-3-color { color: #84cc16; } /* Lime */
+        
+        /* 永久顯示的標籤 (Tooltip) 樣式 */
+        .glass-tooltip {
+            background: rgba(15, 23, 42, 0.85) !important;
+            backdrop-filter: blur(4px) !important;
+            -webkit-backdrop-filter: blur(4px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            color: #f8fafc !important;
+            border-radius: 8px !important;
+            padding: 5px 10px !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            line-height: 1.4 !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important;
+            white-space: nowrap !important;
+        }
+        .leaflet-tooltip-top.glass-tooltip::before { border-top-color: rgba(15, 23, 42, 0.85) !important; }
+        .leaflet-tooltip-bottom.glass-tooltip::before { border-bottom-color: rgba(15, 23, 42, 0.85) !important; }
+        .leaflet-tooltip-left.glass-tooltip::before { border-left-color: rgba(15, 23, 42, 0.85) !important; }
+        .leaflet-tooltip-right.glass-tooltip::before { border-right-color: rgba(15, 23, 42, 0.85) !important; }
+        
+        /* 智慧縮放隱藏標籤 */
+        .hide-tooltips .glass-tooltip {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transition: opacity 0.3s ease;
+        }
+        
+        /* 使用者當前位置光點 (呼吸燈效果) */
+        .user-location-marker {
+            background-color: #3b82f6; 
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+            position: relative;
+            z-index: 1000;
+        }
+        .user-pulse {
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            width: 32px;
+            height: 32px;
+            background-color: rgba(59, 130, 246, 0.6);
+            border-radius: 50%;
+            animation: user-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        @keyframes user-ping {
+            75%, 100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative">
+
+    <!-- 1. 歡迎頁 (Splash Screen) -->
+    <div id="splash-screen" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950">
+        <div class="relative flex items-center justify-center w-32 h-32 mb-8">
+            <div class="absolute inset-0 rounded-full border-2 border-cyan-500 pulse-ring"></div>
+            <i class="ph ph-map-pin-line text-6xl text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]"></i>
+        </div>
+        <h1 class="text-3xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-2">清潔考核系統</h1>
+        <p class="text-slate-400 tracking-widest text-sm uppercase">Smart Inspection Map System</p>
+        <div class="mt-12 text-cyan-500/50 text-sm animate-pulse">系統載入中 System Loading...</div>
+    </div>
+
+    <!-- 2. 主畫面 (地圖容器) -->
+    <div id="map" class="absolute inset-0 z-0"></div>
+
+    <!-- 3. UI 覆蓋層 -->
+    <div id="ui-layer" class="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between">
+        
+        <!-- 頂部：標題與鄉鎮選擇器 -->
+        <div class="pointer-events-auto w-full pt-4 px-4 pb-2 bg-gradient-to-b from-slate-950/80 to-transparent">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <i class="ph-fill ph-target text-cyan-400"></i>
+                    <span id="header-title">請選擇考核鄉鎮</span>
+                </h2>
+                <button class="glass p-2 rounded-full text-slate-300 hover:text-white" onclick="map.fitBounds(currentBounds)">
+                    <i class="ph ph-corners-out text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- 鄉鎮橫向捲動選單 -->
+            <div class="flex gap-3 overflow-x-auto no-scrollbar py-2" id="township-selector">
+                <!-- JavaScript 動態生成按鈕 -->
+            </div>
+        </div>
+
+        <!-- 底部：資訊面板 (Bottom Sheet) -->
+        <div id="bottom-sheet" class="pointer-events-auto bottom-sheet hidden-sheet glass-panel w-full rounded-t-3xl p-5 pb-8 shadow-2xl">
+            <div class="w-12 h-1.5 bg-slate-600 rounded-full mx-auto mb-4"></div>
+            
+            <div id="sheet-content">
+                <h3 class="text-xl font-bold mb-1 text-white" id="sheet-title">點位名稱</h3>
+                <p class="text-sm text-slate-400 mb-5" id="sheet-desc">點擊地圖上的路線或圖示查看詳細資訊</p>
+                
+                <button id="nav-btn" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all active:scale-95 hidden">
+                    <i class="ph-fill ph-navigation-arrow text-xl"></i>
+                    <span>開啟 Google Maps 導航</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 實時定位按鈕 (Locate Me) -->
+        <button id="locate-btn" class="pointer-events-auto absolute bottom-8 right-4 z-[1000] glass p-3 rounded-full text-cyan-400 hover:text-white hover:bg-slate-800 shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all active:scale-95" onclick="locateUser()">
+            <i class="ph-fill ph-crosshair text-2xl"></i>
+        </button>
+
+        <!-- KML 匯入按鈕 -->
+        <button class="pointer-events-auto absolute bottom-24 right-4 z-[1000] glass p-3 rounded-full text-fuchsia-400 hover:text-white hover:bg-slate-800 shadow-[0_0_15px_rgba(217,70,239,0.3)] transition-all active:scale-95" onclick="document.getElementById('kml-upload').click()" title="匯入您的 KML 點位">
+            <i class="ph-fill ph-folder-open text-2xl"></i>
+        </button>
+        <input type="file" id="kml-upload" accept=".kml,.xml" class="hidden" onchange="handleKMLUpload(event)" multiple>
+    </div>
+
+    <!-- 4. 系統邏輯腳本 -->
+    <script>
+        // --- 資料庫 (已根據您提供的 Google My Maps KML 精準座標全面更新) ---
+        const mapData = {
+            "caotun": {
+                name: "草屯鎮",
+                office: { name: "草屯鎮公所", lat: 23.973684, lng: 120.680282, type: "office" },
+                restaurant: { name: "考核聚餐餐廳 (草屯)", lat: 23.975684, lng: 120.682282, type: "restaurant" },
+                routes: [
+                    { id: 1, name: "中山里路線", start: [23.973648, 120.681481], end: [23.973602, 120.681703], color: "#06b6d4" },
+                    { id: 2, name: "玉峰里路線", start: [23.982071, 120.688176], end: [23.982253, 120.688044], color: "#d946ef" },
+                    { id: 3, name: "新豐里路線", start: [23.994150, 120.686715], end: [23.995208, 120.681747], color: "#84cc16" }
+                ]
+            },
+            "shuili": {
+                name: "水里鄉",
+                office: { name: "水里鄉公所", lat: 23.811399, lng: 120.856085, type: "office" },
+                restaurant: { name: "考核聚餐餐廳 (水里)", lat: 23.813399, lng: 120.858085, type: "restaurant" },
+                routes: [
+                    { id: 1, name: "北埔村路線", start: [23.810806, 120.852890], end: [23.810731, 120.852545], color: "#06b6d4" },
+                    { id: 2, name: "車埕村路線", start: [23.833879, 120.867565], end: [23.831322, 120.866498], color: "#d946ef" },
+                    { id: 3, name: "農富村路線", start: [23.821007, 120.856731], end: [23.819186, 120.855775], color: "#84cc16" }
+                ]
+            },
+            "mingjian": {
+                name: "名間鄉",
+                office: { name: "名間鄉公所", lat: 23.838216, lng: 120.702985, type: "office" },
+                restaurant: { name: "考核聚餐餐廳 (名間)", lat: 23.840216, lng: 120.704985, type: "restaurant" },
+                routes: [
+                    { id: 1, name: "萬丹社區路線", start: [23.882604, 120.706387], end: [23.881798, 120.708314], color: "#06b6d4" },
+                    { id: 2, name: "東仁社區路線", start: [23.865709, 120.698917], end: [23.864883, 120.700222], color: "#d946ef" },
+                    { id: 3, name: "仁和社區路線", start: [23.856127, 120.705444], end: [23.853285, 120.704537], color: "#84cc16" }
+                ]
+            },
+            "zhushan": {
+                name: "竹山鎮",
+                office: { name: "竹山鎮公所", lat: 23.757864, lng: 120.671700, type: "office" },
+                restaurant: { name: "考核聚餐餐廳 (竹山)", lat: 23.759864, lng: 120.673700, type: "restaurant" },
+                routes: [
+                    { id: 1, name: "竹山里路線", start: [23.756848, 120.685829], end: [23.758011, 120.686582], color: "#06b6d4" },
+                    { id: 2, name: "中正里路線", start: [23.754191, 120.686499], end: [23.753330, 120.685242], color: "#d946ef" },
+                    { id: 3, name: "中山里路線", start: [23.752871, 120.683013], end: [23.750092, 120.683211], color: "#84cc16" }
+                ]
+            },
+            "xinyi": {
+                name: "信義鄉",
+                office: { name: "信義鄉公所", lat: 23.696797, lng: 120.854557, type: "office" },
+                restaurant: { name: "考核聚餐餐廳 (信義)", lat: 23.698797, lng: 120.856557, type: "restaurant" },
+                routes: [
+                    { id: 1, name: "人和村路線", start: [23.781937, 120.895508], end: [23.778942, 120.896535], color: "#06b6d4" },
+                    { id: 2, name: "潭南村路線", start: [23.821406, 120.939647], end: [23.821096, 120.940643], color: "#d946ef" },
+                    { id: 3, name: "雙龍村路線", start: [23.785161, 120.950123], end: [23.784965, 120.947304], color: "#84cc16" }
+                ]
+            },
+            "nantou": {
+                name: "南投市",
+                office: { name: "南投市公所", lat: 23.911491, lng: 120.687156, type: "office" },
+                restaurant: { name: "考核聚餐餐廳 (南投)", lat: 23.913491, lng: 120.689156, type: "restaurant" },
+                routes: [
+                    { id: 1, name: "內轆社區路線", start: [23.931513, 120.691744], end: [23.928769, 120.691873], color: "#06b6d4" },
+                    { id: 2, name: "慈慧善行協會路線", start: [23.913359, 120.693058], end: [23.915160, 120.692432], color: "#d946ef" },
+                    { id: 3, name: "嘉興社區路線", start: [23.890042, 120.689534], end: [23.889007, 120.691677], color: "#84cc16" }
+                ]
+            },
+            "puli": {
+                name: "埔里鎮",
+                office: { name: "埔里鎮公所", lat: 23.966538, lng: 120.969181, type: "office" },
+                restaurant: { name: "考核聚餐餐廳 (埔里)", lat: 23.968538, lng: 120.971181, type: "restaurant" },
+                routes: [
+                    { id: 1, name: "同聲里路線", start: [23.959005, 120.965108], end: [23.957434, 120.968512], color: "#06b6d4" },
+                    { id: 2, name: "珠格里路線", start: [23.946445, 120.956933], end: [23.942403, 120.958233], color: "#d946ef" },
+                    { id: 3, name: "溪南里路線", start: [23.952208, 120.956484], end: [23.948679, 120.956555], color: "#84cc16" }
+                ]
+            },
+            "guoxing": {
+                name: "國姓鄉",
+                office: { name: "國姓鄉公所", lat: 24.040019, lng: 120.857519, type: "office" },
+                restaurant: { name: "考核聚餐餐廳 (國姓)", lat: 24.042019, lng: 120.859519, type: "restaurant" },
+                routes: [
+                    { id: 1, name: "北港村路線", start: [24.056492, 120.886570], end: [24.061758, 120.888721], color: "#06b6d4" },
+                    { id: 2, name: "石門村路線", start: [24.042759, 120.858486], end: [24.042845, 120.861703], color: "#d946ef" },
+                    { id: 3, name: "國姓社區路線", start: [24.037842, 120.854552], end: [24.034491, 120.855023], color: "#84cc16" }
+                ]
+            },
+            "yuchi": {
+                name: "魚池鄉",
+                office: { name: "魚池鄉公所", lat: 23.895785, lng: 120.935685, type: "office" },
+                restaurant: { name: "考核聚餐餐廳 (魚池)", lat: 23.897785, lng: 120.937685, type: "restaurant" },
+                routes: [
+                    { id: 1, name: "東池村路線", start: [23.895302, 120.944407], end: [23.895137, 120.946363], color: "#06b6d4" },
+                    { id: 2, name: "養靈社區路線", start: [23.903436, 120.916756], end: [23.903411, 120.916971], color: "#d946ef" },
+                    { id: 3, name: "澀水社區路線", start: [23.921918, 120.916919], end: [23.922746, 120.918622], color: "#84cc16" }
+                ]
+            },
+            "lugu": {
+                name: "鹿谷鄉",
+                office: { name: "鹿谷鄉公所", lat: 23.745979, lng: 120.753454, type: "office" },
+                restaurant: { name: "考核聚餐餐廳 (鹿谷)", lat: 23.747979, lng: 120.755454, type: "restaurant" },
+                routes: [
+                    { id: 1, name: "竹林村路線", start: [23.723111, 120.759689], end: [23.725841, 120.758015], color: "#06b6d4" },
+                    { id: 2, name: "竹豐村路線", start: [23.731889, 120.749889], end: [23.733190, 120.747984], color: "#d946ef" },
+                    { id: 3, name: "永隆村路線", start: [23.753367, 120.774639], end: [23.754037, 120.774393], color: "#84cc16" }
+                ]
+            },
+            "jiji": {
+                name: "集集鎮",
+                office: { name: "集集鎮公所", lat: 23.828368, lng: 120.786489, type: "office" },
+                restaurant: { name: "考核聚餐餐廳 (集集)", lat: 23.830368, lng: 120.788489, type: "restaurant" },
+                routes: [
+                    { id: 1, name: "田寮里路線", start: [23.836148, 120.750473], end: [23.834490, 120.750903], color: "#06b6d4" },
+                    { id: 2, name: "集集社區路線", start: [23.830527, 120.783863], end: [23.829727, 120.782989], color: "#d946ef" },
+                    { id: 3, name: "吳厝里路線", start: [23.828143, 120.787825], end: [23.826663, 120.788948], color: "#84cc16" }
+                ]
+            },
+            "zhongliao": {
+                name: "中寮鄉",
+                office: { name: "中寮鄉公所", lat: 23.879003, lng: 120.766098, type: "office" },
+                restaurant: { name: "考核聚餐餐廳 (中寮)", lat: 23.881003, lng: 120.768098, type: "restaurant" },
+                routes: [
+                    { id: 1, name: "永芳村路線", start: [23.930901, 120.743570], end: [23.931247, 120.747089], color: "#06b6d4" },
+                    { id: 2, name: "清水村路線", start: [23.945351, 120.788934], end: [23.944242, 120.790283], color: "#d946ef" },
+                    { id: 3, name: "龍岩村路線", start: [23.933321, 120.758229], end: [23.935202, 120.758507], color: "#84cc16" }
+                ]
+            },
+            "renai": {
+                name: "仁愛鄉",
+                office: { name: "仁愛鄉公所", lat: 24.021544, lng: 121.132062, type: "office" },
+                restaurant: { name: "考核聚餐餐廳 (仁愛)", lat: 24.023544, lng: 121.134062, type: "restaurant" },
+                routes: [
+                    { id: 1, name: "幼獅道班路線", start: [24.047794, 121.156327], end: [24.046639, 121.155915], color: "#06b6d4" },
+                    { id: 2, name: "博望新村路線", start: [24.074991, 121.170174], end: [24.075177, 121.171519], color: "#d946ef" },
+                    { id: 3, name: "壽亭新村路線", start: [24.041546, 121.160913], end: [24.041602, 121.160722], color: "#84cc16" }
+                ]
+            }
+        };
+
+        // --- 地圖初始化 ---
+        let map;
+        let activeLayers = [];
+        let currentBounds = null;
+        let userMarker = null; // 儲存使用者的 GPS 定位標記
+
+        // 自訂科技感圖示 (SVG)
+        const createCustomIcon = (iconColor, iconName) => {
+            const svgTemplate = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+                    <circle cx="20" cy="20" r="18" fill="rgba(15, 23, 42, 0.8)" stroke="${iconColor}" stroke-width="2"/>
+                    <circle cx="20" cy="20" r="24" fill="none" stroke="${iconColor}" stroke-width="1" opacity="0.4" class="pulse"/>
+                    <foreignObject x="8" y="8" width="24" height="24">
+                        <div xmlns="http://www.w3.org/1999/xhtml" style="display:flex; justify-content:center; align-items:center; height:100%; color:${iconColor}; font-size:18px;">
+                            <i class="${iconName}"></i>
+                        </div>
+                    </foreignObject>
+                </svg>
+            `;
+            return L.divIcon({
+                className: 'custom-leaflet-icon',
+                html: svgTemplate,
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
+        };
+
+        const icons = {
+            office: createCustomIcon('#38bdf8', 'ph-fill ph-bank'),       // 藍色公所
+            restaurant: createCustomIcon('#fbbf24', 'ph-fill ph-fork-knife'), // 黃色餐廳
+            start: createCustomIcon('#4ade80', 'ph-fill ph-flag-pennant'), // 綠色起點
+            end: createCustomIcon('#f87171', 'ph-fill ph-flag-checkered')   // 紅色終點
+        };
+
+        function initMap() {
+            // 南投縣中心點
+            map = L.map('map', { zoomControl: false }).setView([23.903, 120.951], 10);
+            L.control.zoom({ position: 'topright' }).addTo(map);
+
+            // 套用深色科技感圖資 (CartoDB Dark Matter)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+            
+            // 加入智慧縮放監聽器：拉遠時自動隱藏標籤防重疊
+            map.on('zoomend', function() {
+                const mapContainer = document.getElementById('map');
+                if (map.getZoom() < 14) {
+                    mapContainer.classList.add('hide-tooltips');
+                } else {
+                    mapContainer.classList.remove('hide-tooltips');
+                }
+            });
+        }
+
+        // --- GPS 精準定位功能 ---
+        function locateUser() {
+            const btnIcon = document.querySelector('#locate-btn i');
+            // 切換為載入中動畫
+            btnIcon.className = "ph ph-spinner animate-spin text-2xl text-amber-400"; 
+
+            if (!navigator.geolocation) {
+                alert("您的瀏覽器不支援地理定位功能！");
+                btnIcon.className = "ph-fill ph-crosshair text-2xl text-cyan-400";
+                return;
+            }
+
+            // 請求高精度 GPS 權限
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    // 若已有舊定位點，先移除
+                    if (userMarker) {
+                        map.removeLayer(userMarker);
+                    }
+
+                    // 建立自訂的「藍色呼吸燈」光點
+                    const userIcon = L.divIcon({
+                        className: 'custom-user-icon',
+                        html: `<div class="relative"><div class="user-pulse"></div><div class="user-location-marker"></div></div>`,
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    });
+
+                    // 放置標記並加上 Tooltip
+                    userMarker = L.marker([lat, lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
+                    userMarker.bindTooltip('<span class="text-blue-300 font-bold">📍 我的位置</span>', {
+                        permanent: true,
+                        direction: 'top',
+                        className: 'glass-tooltip',
+                        offset: [0, -10]
+                    });
+
+                    // 地圖視角平滑飛向使用者當前位置並放大
+                    map.flyTo([lat, lng], 16, { animate: true, duration: 1.5 });
+                    
+                    // 恢復按鈕圖示
+                    btnIcon.className = "ph-fill ph-crosshair text-2xl text-cyan-400"; 
+                },
+                (error) => {
+                    console.error("定位錯誤:", error);
+                    alert("無法獲取您的位置！請確認：\n1. 手機「定位/GPS」已開啟\n2. 允許瀏覽器取用位置權限");
+                    btnIcon.className = "ph-fill ph-crosshair text-2xl text-cyan-400";
+                },
+                {
+                    enableHighAccuracy: true, // 強制使用高精度 GPS (如硬體支援)
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        // --- KML 檔案匯入解析功能 ---
+        function handleKMLUpload(event) {
+            const files = event.target.files;
+            if(!files.length) return;
+
+            document.querySelector('#header-title').innerText = "載入自訂 KML 中...";
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    parseAndRenderKML(text);
+                };
+                reader.readAsText(file);
+            });
+            
+            // 清空 input 讓下次可以重複選擇同個檔案
+            event.target.value = '';
+        }
+
+        function parseAndRenderKML(kmlText) {
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(kmlText, "text/xml");
+            const placemarks = xml.querySelectorAll("Placemark");
+            
+            const kmlBounds = [];
+
+            // 為了不與內建資料混淆，匯入的 KML 我們套用獨立的顏色
+            placemarks.forEach(p => {
+                const name = p.querySelector("name")?.textContent || "未命名點位";
+                
+                // 過濾掉可能夾帶的 HTML 標籤
+                let rawDesc = p.querySelector("description")?.textContent || "自訂匯入位置";
+                const tempDiv = document.createElement("div");
+                tempDiv.innerHTML = rawDesc;
+                const desc = tempDiv.textContent || tempDiv.innerText || "";
+
+                // 解析點位 (Point)
+                const pointCoord = p.querySelector("Point coordinates")?.textContent;
+                if (pointCoord) {
+                    const [lng, lat] = pointCoord.trim().split(',').map(Number);
+                    if (lat && lng) {
+                        const marker = L.marker([lat, lng], { icon: icons.start }).addTo(map);
+                        marker.bindTooltip(`<span class="text-fuchsia-400 font-bold">${name}</span>`, {
+                            permanent: true, direction: 'top', className: 'glass-tooltip', offset: [0, -20]
+                        });
+                        marker.on('click', () => showBottomSheet(name, desc, lat, lng));
+                        activeLayers.push(marker);
+                        kmlBounds.push([lat, lng]);
+                    }
+                }
+
+                // 解析自訂路線 (LineString)
+                const lineCoord = p.querySelector("LineString coordinates")?.textContent;
+                if (lineCoord) {
+                    const coords = lineCoord.trim().split(/\s+/).map(pair => {
+                        const [lng, lat] = pair.split(',').map(Number);
+                        return [lat, lng];
+                    }).filter(c => !isNaN(c[0]) && !isNaN(c[1]));
+                    
+                    if (coords.length > 0) {
+                        const polyline = L.polyline(coords, {
+                            color: '#d946ef', // Fuchsia 色
+                            weight: 5,
+                            opacity: 0.9,
+                            dashArray: '10, 10'
+                        }).addTo(map);
+                        polyline.bindTooltip(`<span class="text-white font-bold">${name}</span>`, {
+                            permanent: true, direction: 'center', className: 'glass-tooltip'
+                        });
+                        polyline.on('click', () => showBottomSheet(name, desc, coords[0][0], coords[0][1]));
+                        activeLayers.push(polyline);
+                        kmlBounds.push(...coords);
+                    }
+                }
+            });
+
+            // 將地圖鏡頭移動到匯入的範圍
+            if (kmlBounds.length > 0) {
+                currentBounds = L.latLngBounds(kmlBounds);
+                map.fitBounds(currentBounds, { padding: [50, 50], animate: true, duration: 1.5 });
+                document.querySelector('#header-title').innerText = "預覽：您的自訂 KML 地圖";
+                hideBottomSheet();
+            }
+        }
+
+        // --- UI 控制與互動 ---
+        const bottomSheet = document.getElementById('bottom-sheet');
+        const sheetTitle = document.getElementById('sheet-title');
+        const sheetDesc = document.getElementById('sheet-desc');
+        const navBtn = document.getElementById('nav-btn');
+
+        function showBottomSheet(title, desc, lat, lng) {
+            sheetTitle.innerText = title;
+            sheetDesc.innerHTML = desc;
+            
+            navBtn.classList.remove('hidden');
+            navBtn.onclick = () => {
+                // 喚醒手機 Google Maps 導航
+                const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+                window.open(url, '_blank');
+            };
+            
+            bottomSheet.classList.remove('hidden-sheet');
+        }
+
+        function hideBottomSheet() {
+            bottomSheet.classList.add('hidden-sheet');
+        }
+
+        // 載入指定鄉鎮的資料到地圖
+        function loadTownship(id) {
+            const data = mapData[id];
+            if (!data) return;
+
+            // 1. 更新標題
+            document.getElementById('header-title').innerText = `${data.name} 考核點位`;
+            
+            // 更新選單按鈕樣式
+            document.querySelectorAll('.township-btn').forEach(btn => {
+                if(btn.dataset.id === id) {
+                    btn.classList.add('bg-cyan-600', 'border-cyan-400', 'text-white');
+                    btn.classList.remove('bg-slate-800/50', 'border-slate-600', 'text-slate-300');
+                } else {
+                    btn.classList.remove('bg-cyan-600', 'border-cyan-400', 'text-white');
+                    btn.classList.add('bg-slate-800/50', 'border-slate-600', 'text-slate-300');
+                }
+            });
+
+            // 2. 清除舊圖層
+            activeLayers.forEach(layer => map.removeLayer(layer));
+            activeLayers = [];
+            hideBottomSheet();
+
+            // 3. 準備邊界計算
+            const bounds = [];
+
+            // 4. 加入公所與餐廳
+            const addPOI = (poi) => {
+                const marker = L.marker([poi.lat, poi.lng], { icon: icons[poi.type] }).addTo(map);
+                marker.on('click', () => showBottomSheet(poi.name, `座標：${poi.lat.toFixed(4)}, ${poi.lng.toFixed(4)}`, poi.lat, poi.lng));
+                
+                // 加入永久顯示標籤
+                const colorClass = poi.type === 'office' ? 'text-sky-400' : 'text-amber-400';
+                marker.bindTooltip(`<span class="${colorClass} font-bold">${poi.name}</span>`, {
+                    permanent: true,
+                    direction: 'top',
+                    className: 'glass-tooltip',
+                    offset: [0, -20]
+                });
+
+                activeLayers.push(marker);
+                bounds.push([poi.lat, poi.lng]);
+            };
+            addPOI(data.office);
+            addPOI(data.restaurant);
+
+            // 5. 加入路線 (起點、終點、連線)
+            data.routes.forEach(route => {
+                // 畫線
+                const polyline = L.polyline([route.start, route.end], {
+                    color: route.color,
+                    weight: 4,
+                    opacity: 0.8,
+                    dashArray: '10, 10', // 虛線效果增加科技感
+                    lineCap: 'round'
+                }).addTo(map);
+                
+                // 起點標記
+                const startMarker = L.marker(route.start, { icon: icons.start }).addTo(map);
+                startMarker.on('click', () => showBottomSheet(`${route.name} (起點)`, '點擊下方按鈕開始導航至此處', route.start[0], route.start[1]));
+                startMarker.bindTooltip(`<div class="text-green-400 font-bold mb-0.5">🟢 起點</div><div class="text-slate-200">${route.name}</div>`, {
+                    permanent: true, direction: 'right', className: 'glass-tooltip text-center', offset: [15, 0]
+                });
+                
+                // 終點標記
+                const endMarker = L.marker(route.end, { icon: icons.end }).addTo(map);
+                endMarker.on('click', () => showBottomSheet(`${route.name} (終點)`, '點擊下方按鈕開始導航至此處', route.end[0], route.end[1]));
+                endMarker.bindTooltip(`<div class="text-red-400 font-bold mb-0.5">🏁 終點</div><div class="text-slate-200">${route.name}</div>`, {
+                    permanent: true, direction: 'left', className: 'glass-tooltip text-center', offset: [-15, 0]
+                });
+                
+                // 點擊路線本身
+                polyline.on('click', () => showBottomSheet(route.name, `包含起點與終點，共兩處考核點`, route.start[0], route.start[1]));
+
+                activeLayers.push(polyline, startMarker, endMarker);
+                bounds.push(route.start, route.end);
+            });
+
+            // 6. 縮放視角以包含所有點位
+            if (bounds.length > 0) {
+                currentBounds = L.latLngBounds(bounds);
+                map.fitBounds(currentBounds, { padding: [50, 50], animate: true, duration: 1 });
+            }
+        }
+
+        // 初始化鄉鎮選單
+        function initMenu() {
+            const selector = document.getElementById('township-selector');
+            Object.keys(mapData).forEach((id, index) => {
+                const btn = document.createElement('button');
+                btn.dataset.id = id;
+                btn.className = `township-btn whitespace-nowrap px-4 py-2 rounded-full border text-sm font-medium transition-all backdrop-blur-md shadow-lg ${index === 0 ? 'bg-cyan-600 border-cyan-400 text-white' : 'bg-slate-800/50 border-slate-600 text-slate-300'}`;
+                btn.innerText = mapData[id].name;
+                btn.onclick = () => loadTownship(id);
+                selector.appendChild(btn);
+            });
+        }
+
+        // --- 啟動程序 ---
+        window.onload = () => {
+            initMap();
+            initMenu();
+            
+            // 預設載入第一個鄉鎮 (草屯鎮)
+            loadTownship(Object.keys(mapData)[0]);
+
+            // 移除歡迎頁動畫
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.style.opacity = '0';
+                splash.style.visibility = 'hidden';
+            }, 2000); // 2秒後淡出
+        };
+    </script>
+</body>
+</html>
