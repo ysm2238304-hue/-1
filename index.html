@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="清潔考核">
@@ -17,71 +16,39 @@
 
     <title>南投縣清潔考核地圖系統</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Leaflet Map CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
 
-        /* 🌟 核心佈局與防卡死設定 */
         html, body { 
-            width: 100vw;
-            height: 100dvh; 
+            width: 100vw; height: 100dvh; 
             font-family: 'Noto Sans TC', sans-serif; 
-            background-color: #020617; 
-            color: #f8fafc; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
+            background-color: #020617; color: #f8fafc; 
+            margin: 0; padding: 0; overflow: hidden; 
             overscroll-behavior: none; 
         }
 
-        .glass { 
-            background: rgba(15, 23, 42, 0.75); 
-            backdrop-filter: blur(12px); 
-            -webkit-backdrop-filter: blur(12px); 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-        }
-        
-        .glass-panel { 
-            background: rgba(30, 41, 59, 0.95); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px); 
-            border-top: 1px solid rgba(255, 255, 255, 0.15); 
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7); 
-        }
+        .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-panel { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7); }
 
-        /* 歡迎頁與登入頁動畫過渡效果 */
-        #splash-screen { transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out; }
-        #login-screen { transition: opacity 0.5s ease-in-out; }
-        
+        #splash-screen, #login-screen { transition: opacity 0.5s ease-in-out; }
         .pulse-ring { animation: pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1); }
-        @keyframes pulse { 
-            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); } 
-            70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); } 
-            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } 
-        }
+        @keyframes pulse { 0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); } 100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } }
 
-        /* 地圖控制元件樣式覆寫 */
         .leaflet-control-attribution { display: none !important; }
         .leaflet-control-zoom { border: none !important; margin-top: 230px !important; }
         .leaflet-bar a { background-color: rgba(30, 41, 59, 0.8) !important; color: #06b6d4 !important; border-color: rgba(255,255,255,0.1) !important;}
 
-        /* 面板滑動過渡動畫 */
         .bottom-sheet { transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .bottom-sheet.hidden-sheet { transform: translateY(100%); }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 自訂彈窗與標記樣式 */
         .glass-tooltip { background: rgba(15, 23, 42, 0.85) !important; backdrop-filter: blur(4px) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; color: #f8fafc !important; border-radius: 8px !important; padding: 5px 10px !important; font-size: 12px !important; font-weight: 500 !important; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important; white-space: nowrap !important; }
         .hide-tooltips .glass-tooltip { opacity: 0 !important; visibility: hidden !important; transition: opacity 0.3s ease; }
         
@@ -89,11 +56,10 @@
         .user-pulse { position: absolute; top: -8px; left: -8px; width: 32px; height: 32px; background-color: rgba(59, 130, 246, 0.6); border-radius: 50%; animation: user-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
         @keyframes user-ping { 75%, 100% { transform: scale(2); opacity: 0; } }
 
-        /* 針對 iOS 狀態列安全區域設計的頂部 Padding */
         .safe-top-padding { padding-top: max(1rem, env(safe-area-inset-top)); }
         
-        /* 🌟 路線高亮與變暗的電影級過渡動畫 */
-        path.leaflet-interactive { transition: stroke-opacity 0.6s ease, stroke-width 0.6s ease, stroke 0.6s ease; }
+        /* 🌟 路線高亮與變暗的過渡動畫 (包含虛線動畫支援) */
+        path.leaflet-interactive { transition: stroke-opacity 0.6s ease, stroke-width 0.6s ease, stroke 0.6s ease, stroke-dasharray 0.6s ease; }
     </style>
 </head>
 <body>
@@ -247,115 +213,115 @@
          JavaScript 詳細設定與核心邏輯 
          ========================================== -->
     <script>
-        // 🚨 您的專屬 GAS 網址 (請務必將下方的網址替換成您最新發佈的 URL！)
+        // 🚨 您的專屬 GAS 網址 (已經設定為您能正確連線的 URL)
         const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkClBmpcbfVL62Fyt0cDv3vzSF8ygo6_pMQtm6x2cCSiUGi3qaRLJ9i6ZKo-rcn9r2/exec"; 
         
         const SYSTEM_PASSWORD = "54004658";
 
-        // --- 完整 13 鄉鎮市資料庫 (精準展開) ---
+        // --- 🌟 全新解析 KML 真實彎曲座標，完整 13 鄉鎮市資料庫 ---
         const mapData = {
             "caotun": { 
-                name: "草屯鎮", office: { name: "草屯鎮公所", lat: 23.973684, lng: 120.680282, type: "office" }, restaurant: { name: "考核聚餐餐廳 (草屯)", lat: 23.975684, lng: 120.682282, type: "restaurant" }, 
+                name: "草屯鎮", office: { name: "草屯鎮公所", lat: 23.9736845, lng: 120.6802819, type: "office" }, restaurant: { name: "考核聚餐餐廳 (草屯)", lat: 23.9756845, lng: 120.6822819, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "中山里", path: [[23.973648, 120.681481], [23.973602, 120.681703]], color: "#06b6d4" }, 
-                    { id: 2, name: "玉峰里", path: [[23.982071, 120.688176], [23.982253, 120.688044]], color: "#d946ef" }, 
-                    { id: 3, name: "新豐里", path: [[23.994150, 120.686715], [23.995208, 120.681747]], color: "#84cc16" }
+                    { id: 1, name: "中山里", path: [[23.973648, 120.681481], [23.973460, 120.682347], [23.974195, 120.682406], [23.972881, 120.682341]], color: "#06b6d4" }, 
+                    { id: 2, name: "玉峰里", path: [[23.982066, 120.688199], [23.981820, 120.688376], [23.982414, 120.689186], [23.982874, 120.688768], [23.982624, 120.687776], [23.982291, 120.688017]], color: "#d946ef" }, 
+                    { id: 3, name: "新豐里", path: [[23.995212, 120.681790], [23.994669, 120.684203], [23.994160, 120.686595]], color: "#84cc16" }
                 ] 
             },
             "shuili": { 
-                name: "水里鄉", office: { name: "水里鄉公所", lat: 23.811399, lng: 120.856085, type: "office" }, restaurant: { name: "考核聚餐餐廳 (水里)", lat: 23.813399, lng: 120.858085, type: "restaurant" }, 
+                name: "水里鄉", office: { name: "水里鄉公所", lat: 23.8113991, lng: 120.8560852, type: "office" }, restaurant: { name: "考核聚餐餐廳 (水里)", lat: 23.8133991, lng: 120.8580852, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "北埔村", path: [[23.810806, 120.852890], [23.810731, 120.852545]], color: "#06b6d4" }, 
-                    { id: 2, name: "車埕村", path: [[23.833879, 120.867565], [23.831322, 120.866498]], color: "#d946ef" }, 
-                    { id: 3, name: "農富村", path: [[23.821007, 120.856731], [23.819186, 120.855775]], color: "#84cc16" }
+                    { id: 1, name: "北埔村", path: [[23.810731, 120.852545], [23.810547, 120.852615], [23.810360, 120.852660], [23.810149, 120.852722], [23.810027, 120.852754], [23.809943, 120.852786], [23.809288, 120.852988], [23.809430, 120.853312], [23.809547, 120.853289], [23.809693, 120.853261], [23.809855, 120.853224], [23.810135, 120.853166], [23.810402, 120.853083], [23.810575, 120.853008], [23.810813, 120.852911]], color: "#06b6d4" }, 
+                    { id: 2, name: "車埕村", path: [[23.831373, 120.866492], [23.832033, 120.866253], [23.832426, 120.866323], [23.832640, 120.866410], [23.832840, 120.866551], [23.833198, 120.866883], [23.833566, 120.867248], [23.833795, 120.867491], [23.833836, 120.867531], [23.833879, 120.867565]], color: "#d946ef" }, 
+                    { id: 3, name: "農富村", path: [[23.821010, 120.856727], [23.820845, 120.856670], [23.820737, 120.856646], [23.820585, 120.856630], [23.820212, 120.856512], [23.819923, 120.856389], [23.819697, 120.856239], [23.819236, 120.855836]], color: "#84cc16" }
                 ] 
             },
             "mingjian": { 
-                name: "名間鄉", office: { name: "名間鄉公所", lat: 23.838216, lng: 120.702985, type: "office" }, restaurant: { name: "考核聚餐餐廳 (名間)", lat: 23.840216, lng: 120.704985, type: "restaurant" }, 
+                name: "名間鄉", office: { name: "名間鄉公所", lat: 23.8382161, lng: 120.702985, type: "office" }, restaurant: { name: "考核聚餐餐廳 (名間)", lat: 23.8402161, lng: 120.704985, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "萬丹社區", path: [[23.882604, 120.706387], [23.881798, 120.708314]], color: "#06b6d4" }, 
-                    { id: 2, name: "東仁社區", path: [[23.865709, 120.698917], [23.864883, 120.700222]], color: "#d946ef" }, 
-                    { id: 3, name: "仁和社區", path: [[23.856127, 120.705444], [23.853285, 120.704537]], color: "#84cc16" }
+                    { id: 1, name: "萬丹社區", path: [[23.881811, 120.708308], [23.882762, 120.707691], [23.882581, 120.707455], [23.882493, 120.707283], [23.882463, 120.707149], [23.882453, 120.706999], [23.882468, 120.706817], [23.882601, 120.706597], [23.882605, 120.706414]], color: "#06b6d4" }, 
+                    { id: 2, name: "東仁社區", path: [[23.865712, 120.698944], [23.865625, 120.699023], [23.865480, 120.699096], [23.865317, 120.699177], [23.865210, 120.699295], [23.865148, 120.699362], [23.865075, 120.699456], [23.864984, 120.699553], [23.864905, 120.699617], [23.864891, 120.699663], [23.864891, 120.699751], [23.864913, 120.700009], [23.864915, 120.700100], [23.864908, 120.700191]], color: "#d946ef" }, 
+                    { id: 3, name: "仁和社區", path: [[23.856111, 120.705445], [23.855690, 120.705472], [23.855572, 120.705472], [23.855498, 120.705381], [23.855371, 120.705306], [23.855116, 120.705311], [23.854772, 120.705386], [23.854684, 120.705354], [23.854581, 120.705263], [23.854463, 120.705156], [23.854301, 120.705123], [23.854252, 120.705021], [23.854228, 120.704882], [23.854129, 120.704828], [23.853874, 120.704769], [23.853335, 120.704582]], color: "#84cc16" }
                 ] 
             },
             "zhushan": { 
-                name: "竹山鎮", office: { name: "竹山鎮公所", lat: 23.757864, lng: 120.671700, type: "office" }, restaurant: { name: "考核聚餐餐廳 (竹山)", lat: 23.759864, lng: 120.673700, type: "restaurant" }, 
+                name: "竹山鎮", office: { name: "竹山鎮公所", lat: 23.7578635, lng: 120.6716995, type: "office" }, restaurant: { name: "考核聚餐餐廳 (竹山)", lat: 23.7598635, lng: 120.6736995, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "竹山里", path: [[23.756848, 120.685829], [23.758011, 120.686582]], color: "#06b6d4" }, 
-                    { id: 2, name: "中正里", path: [[23.754191, 120.686499], [23.753330, 120.685242]], color: "#d946ef" }, 
-                    { id: 3, name: "中山里", path: [[23.752871, 120.683013], [23.750092, 120.683211]], color: "#84cc16" }
+                    { id: 1, name: "竹山里", path: [[23.756848, 120.685829], [23.757083, 120.685687], [23.757275, 120.685555], [23.757385, 120.685475], [23.757454, 120.685593], [23.757582, 120.685802], [23.757751, 120.686121], [23.757859, 120.686293], [23.757922, 120.686416], [23.757999, 120.686548]], color: "#06b6d4" }, 
+                    { id: 2, name: "中正里", path: [[23.754174, 120.686492], [23.754005, 120.686425], [23.753823, 120.686262], [23.753654, 120.686012], [23.753565, 120.685891], [23.753487, 120.685733], [23.753332, 120.685275]], color: "#d946ef" }, 
+                    { id: 3, name: "中山里", path: [[23.752910, 120.683032], [23.752694, 120.682968], [23.752478, 120.682903], [23.752242, 120.682887], [23.751810, 120.682944], [23.751137, 120.683043], [23.750602, 120.683118], [23.750131, 120.683193]], color: "#84cc16" }
                 ] 
             },
             "xinyi": { 
                 name: "信義鄉", office: { name: "信義鄉公所", lat: 23.696797, lng: 120.854557, type: "office" }, restaurant: { name: "考核聚餐餐廳 (信義)", lat: 23.698797, lng: 120.856557, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "人和村", path: [[23.781937, 120.895508], [23.778942, 120.896535]], color: "#06b6d4" }, 
-                    { id: 2, name: "潭南村", path: [[23.821406, 120.939647], [23.821096, 120.940643]], color: "#d946ef" }, 
-                    { id: 3, name: "雙龍村", path: [[23.785161, 120.950123], [23.784965, 120.947304]], color: "#84cc16" }
+                    { id: 1, name: "人和村", path: [[23.778942, 120.896535], [23.779134, 120.896106], [23.779323, 120.895867], [23.779657, 120.895760], [23.780030, 120.895642], [23.780383, 120.895578], [23.780766, 120.895545], [23.781178, 120.895588], [23.781569, 120.895599], [23.781948, 120.895513]], color: "#06b6d4" }, 
+                    { id: 2, name: "潭南村", path: [[23.821405, 120.939646], [23.821261, 120.939679], [23.821188, 120.939603], [23.820027, 120.938606], [23.819747, 120.939056], [23.819831, 120.939158], [23.820081, 120.939330], [23.820219, 120.939437], [23.820169, 120.939593], [23.820071, 120.939721], [23.820263, 120.939813], [23.820420, 120.940027], [23.820552, 120.940199], [23.820793, 120.940333], [23.821096, 120.940643]], color: "#d946ef" }, 
+                    { id: 3, name: "雙龍村", path: [[23.784948, 120.947299], [23.784954, 120.947670], [23.785080, 120.948063], [23.785348, 120.948600], [23.785495, 120.949072], [23.785515, 120.949555], [23.785348, 120.949898], [23.785161, 120.950123]], color: "#84cc16" }
                 ] 
             },
             "nantou": { 
-                name: "南投市", office: { name: "南投市公所", lat: 23.911491, lng: 120.687156, type: "office" }, restaurant: { name: "考核聚餐餐廳 (南投)", lat: 23.913491, lng: 120.689156, type: "restaurant" }, 
+                name: "南投市", office: { name: "南投市公所", lat: 23.9114913, lng: 120.6871564, type: "office" }, restaurant: { name: "考核聚餐餐廳 (南投)", lat: 23.9134913, lng: 120.6891564, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "內轆社區", path: [[23.931513, 120.691744], [23.928769, 120.691873]], color: "#06b6d4" }, 
-                    { id: 2, name: "慈慧善行", path: [[23.913359, 120.693058], [23.915160, 120.692432]], color: "#d946ef" }, 
-                    { id: 3, name: "嘉興社區", path: [[23.890042, 120.689534], [23.889007, 120.691677]], color: "#84cc16" }
+                    { id: 1, name: "內轆社區", path: [[23.928796, 120.691903], [23.930523, 120.691768], [23.931002, 120.691779], [23.931400, 120.691817], [23.931512, 120.691742]], color: "#06b6d4" }, 
+                    { id: 2, name: "慈慧善行", path: [[23.915154, 120.692452], [23.914149, 120.693359], [23.913382, 120.693058]], color: "#d946ef" }, 
+                    { id: 3, name: "嘉興社區", path: [[23.889016, 120.691666], [23.889456, 120.691097], [23.889770, 120.690733], [23.890055, 120.690293], [23.890369, 120.689842], [23.890228, 120.689696], [23.890060, 120.689550]], color: "#84cc16" }
                 ] 
             },
             "puli": { 
-                name: "埔里鎮", office: { name: "埔里鎮公所", lat: 23.966538, lng: 120.969181, type: "office" }, restaurant: { name: "考核聚餐餐廳 (埔里)", lat: 23.968538, lng: 120.971181, type: "restaurant" }, 
+                name: "埔里鎮", office: { name: "埔里鎮公所", lat: 23.9665377, lng: 120.9691809, type: "office" }, restaurant: { name: "考核聚餐餐廳 (埔里)", lat: 23.9685377, lng: 120.9711809, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "同聲里", path: [[23.959005, 120.965108], [23.957434, 120.968512]], color: "#06b6d4" }, 
-                    { id: 2, name: "珠格里", path: [[23.946445, 120.956933], [23.942403, 120.958233]], color: "#d946ef" }, 
-                    { id: 3, name: "溪南里", path: [[23.952208, 120.956484], [23.948679, 120.956555]], color: "#84cc16" }
+                    { id: 1, name: "同聲里", path: [[23.959005, 120.965108], [23.958760, 120.965849], [23.958274, 120.967308], [23.957434, 120.968512]], color: "#06b6d4" }, 
+                    { id: 2, name: "珠格里", path: [[23.946470, 120.956893], [23.942440, 120.958218]], color: "#d946ef" }, 
+                    { id: 3, name: "溪南里", path: [[23.952208, 120.956484], [23.951663, 120.956629], [23.951104, 120.956541], [23.950595, 120.956340], [23.950157, 120.956006], [23.949971, 120.955902], [23.949891, 120.955916], [23.949825, 120.955962], [23.949737, 120.956113], [23.949531, 120.956291], [23.949242, 120.956388], [23.948679, 120.956555]], color: "#84cc16" }
                 ] 
             },
             "guoxing": { 
-                name: "國姓鄉", office: { name: "國姓鄉公所", lat: 24.040019, lng: 120.857519, type: "office" }, restaurant: { name: "考核聚餐餐廳 (國姓)", lat: 24.042019, lng: 120.859519, type: "restaurant" }, 
+                name: "國姓鄉", office: { name: "國姓鄉公所", lat: 24.040019, lng: 120.8575192, type: "office" }, restaurant: { name: "考核聚餐餐廳 (國姓)", lat: 24.042019, lng: 120.8595192, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "北港村", path: [[24.056492, 120.886570], [24.061758, 120.888721]], color: "#06b6d4" }, 
-                    { id: 2, name: "石門村", path: [[24.042759, 120.858486], [24.042845, 120.861703]], color: "#d946ef" }, 
-                    { id: 3, name: "國姓社區", path: [[24.037842, 120.854552], [24.034491, 120.855023]], color: "#84cc16" }
+                    { id: 1, name: "北港村", path: [[24.056492, 120.886570], [24.057619, 120.886956], [24.058902, 120.887396], [24.059950, 120.887815], [24.060577, 120.888276], [24.061018, 120.888555], [24.061234, 120.888866], [24.061724, 120.889252], [24.061782, 120.888770]], color: "#06b6d4" }, 
+                    { id: 2, name: "石門村", path: [[24.042776, 120.858522], [24.043016, 120.858694], [24.043266, 120.858876], [24.043472, 120.859102], [24.043580, 120.859477], [24.043555, 120.859676], [24.043418, 120.859960], [24.043408, 120.860357], [24.043428, 120.860759], [24.043192, 120.861027], [24.042957, 120.861328], [24.042845, 120.861703]], color: "#d946ef" }, 
+                    { id: 3, name: "國姓社區", path: [[24.037839, 120.854539], [24.037479, 120.854804], [24.037077, 120.855137], [24.036724, 120.855362], [24.036313, 120.855169], [24.035989, 120.855019], [24.035637, 120.854955], [24.035225, 120.854955], [24.034755, 120.854965], [24.034539, 120.855014]], color: "#84cc16" }
                 ] 
             },
             "yuchi": { 
-                name: "魚池鄉", office: { name: "魚池鄉公所", lat: 23.895785, lng: 120.935685, type: "office" }, restaurant: { name: "考核聚餐餐廳 (魚池)", lat: 23.897785, lng: 120.937685, type: "restaurant" }, 
+                name: "魚池鄉", office: { name: "魚池鄉公所", lat: 23.8957849, lng: 120.9356849, type: "office" }, restaurant: { name: "考核聚餐餐廳 (魚池)", lat: 23.8977849, lng: 120.9376849, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "東池村", path: [[23.895302, 120.944407], [23.895137, 120.946363]], color: "#06b6d4" }, 
-                    { id: 2, name: "養靈社區", path: [[23.903436, 120.916756], [23.903411, 120.916971]], color: "#d946ef" }, 
-                    { id: 3, name: "澀水社區", path: [[23.921918, 120.916919], [23.922746, 120.918622]], color: "#84cc16" }
+                    { id: 1, name: "東池村", path: [[23.895298, 120.944443], [23.895259, 120.944867], [23.895137, 120.946363]], color: "#06b6d4" }, 
+                    { id: 2, name: "養靈社區", path: [[23.903436, 120.916756], [23.903578, 120.916468], [23.903691, 120.916136], [23.903651, 120.915919], [23.903541, 120.915758], [23.903453, 120.915699], [23.903205, 120.916101], [23.903102, 120.916413], [23.903205, 120.916614], [23.903411, 120.916957]], color: "#d946ef" }, 
+                    { id: 3, name: "澀水社區", path: [[23.921966, 120.916879], [23.922118, 120.916777], [23.922256, 120.916796], [23.922378, 120.916863], [23.922810, 120.917104], [23.922824, 120.917201], [23.922780, 120.917523], [23.922839, 120.917807], [23.922869, 120.918016], [23.922805, 120.918322], [23.922766, 120.918536], [23.922746, 120.918622]], color: "#84cc16" }
                 ] 
             },
             "lugu": { 
-                name: "鹿谷鄉", office: { name: "鹿谷鄉公所", lat: 23.745979, lng: 120.753454, type: "office" }, restaurant: { name: "考核聚餐餐廳 (鹿谷)", lat: 23.747979, lng: 120.755454, type: "restaurant" }, 
+                name: "鹿谷鄉", office: { name: "鹿谷鄉公所", lat: 23.745979, lng: 120.7534535, type: "office" }, restaurant: { name: "考核聚餐餐廳 (鹿谷)", lat: 23.747979, lng: 120.7554535, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "竹林村", path: [[23.723111, 120.759689], [23.725841, 120.758015]], color: "#06b6d4" }, 
-                    { id: 2, name: "竹豐村", path: [[23.731889, 120.749889], [23.733190, 120.747984]], color: "#d946ef" }, 
-                    { id: 3, name: "永隆村", path: [[23.753367, 120.774639], [23.754037, 120.774393]], color: "#84cc16" }
+                    { id: 1, name: "竹林村", path: [[23.725828, 120.758027], [23.725695, 120.758210], [23.725519, 120.758419], [23.725362, 120.758548], [23.725190, 120.758617], [23.724905, 120.758751], [23.724669, 120.758918], [23.724409, 120.759100], [23.724134, 120.759229], [23.723795, 120.759395], [23.723451, 120.759556], [23.723240, 120.759647]], color: "#06b6d4" }, 
+                    { id: 2, name: "竹豐村", path: [[23.733175, 120.747998], [23.732622, 120.748991], [23.732478, 120.749197], [23.732296, 120.749428], [23.732122, 120.749635], [23.731913, 120.749865]], color: "#d946ef" }, 
+                    { id: 3, name: "永隆村", path: [[23.753360, 120.774664], [23.753161, 120.774761], [23.753357, 120.775145], [23.753549, 120.775295], [23.754049, 120.774404]], color: "#84cc16" }
                 ] 
             },
             "jiji": { 
-                name: "集集鎮", office: { name: "集集鎮公所", lat: 23.828368, lng: 120.786489, type: "office" }, restaurant: { name: "考核聚餐餐廳 (集集)", lat: 23.830368, lng: 120.788489, type: "restaurant" }, 
+                name: "集集鎮", office: { name: "集集鎮公所", lat: 23.8283682, lng: 120.7864885, type: "office" }, restaurant: { name: "考核聚餐餐廳 (集集)", lat: 23.8303682, lng: 120.7884885, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "田寮里", path: [[23.836148, 120.750473], [23.834490, 120.750903]], color: "#06b6d4" }, 
-                    { id: 2, name: "集集社區", path: [[23.830527, 120.783863], [23.829727, 120.782989]], color: "#d946ef" }, 
-                    { id: 3, name: "吳厝里", path: [[23.828143, 120.787825], [23.826663, 120.788948]], color: "#84cc16" }
+                    { id: 1, name: "田寮里", path: [[23.836133, 120.750475], [23.835927, 120.750454], [23.835505, 120.750346], [23.835205, 120.750223], [23.835092, 120.750529], [23.834935, 120.751006], [23.834857, 120.751092], [23.834744, 120.751055], [23.834499, 120.750915]], color: "#06b6d4" }, 
+                    { id: 2, name: "集集社區", path: [[23.830511, 120.783897], [23.830530, 120.784128], [23.829834, 120.784165], [23.829731, 120.783039]], color: "#d946ef" }, 
+                    { id: 3, name: "吳厝里", path: [[23.826726, 120.788951], [23.828169, 120.788919], [23.828151, 120.787846]], color: "#84cc16" }
                 ] 
             },
             "zhongliao": { 
-                name: "中寮鄉", office: { name: "中寮鄉公所", lat: 23.879003, lng: 120.766098, type: "office" }, restaurant: { name: "考核聚餐餐廳 (中寮)", lat: 23.881003, lng: 120.768098, type: "restaurant" }, 
+                name: "中寮鄉", office: { name: "中寮鄉公所", lat: 23.8790026, lng: 120.766098, type: "office" }, restaurant: { name: "考核聚餐餐廳 (中寮)", lat: 23.8810026, lng: 120.768098, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "永芳村", path: [[23.930901, 120.743570], [23.931247, 120.747089]], color: "#06b6d4" }, 
-                    { id: 2, name: "清水村", path: [[23.945351, 120.788934], [23.944242, 120.790283]], color: "#d946ef" }, 
-                    { id: 3, name: "龍岩村", path: [[23.933321, 120.758229], [23.935202, 120.758507]], color: "#84cc16" }
+                    { id: 1, name: "永芳村", path: [[23.930912, 120.743591], [23.931236, 120.747045]], color: "#06b6d4" }, 
+                    { id: 2, name: "清水村", path: [[23.945342, 120.788963], [23.945084, 120.789358], [23.945025, 120.789545], [23.944981, 120.789679], [23.944908, 120.789781], [23.944766, 120.789958], [23.944658, 120.790130], [23.944594, 120.790286], [23.944520, 120.790629], [23.944266, 120.790307]], color: "#d946ef" }, 
+                    { id: 3, name: "龍岩村", path: [[23.935209, 120.758523], [23.935591, 120.757820], [23.935027, 120.757326], [23.934831, 120.757241], [23.934699, 120.757257], [23.934542, 120.757337], [23.933375, 120.758169]], color: "#84cc16" }
                 ] 
             },
             "renai": { 
-                name: "仁愛鄉", office: { name: "仁愛鄉公所", lat: 24.021544, lng: 121.132062, type: "office" }, restaurant: { name: "考核聚餐餐廳 (仁愛)", lat: 24.023544, lng: 121.134062, type: "restaurant" }, 
+                name: "仁愛鄉", office: { name: "仁愛鄉公所", lat: 24.021544, lng: 121.1320616, type: "office" }, restaurant: { name: "考核聚餐餐廳 (仁愛)", lat: 24.023544, lng: 121.1340616, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "幼獅道班", path: [[24.047794, 121.156327], [24.046639, 121.155915]], color: "#06b6d4" }, 
-                    { id: 2, name: "博望新村", path: [[24.074991, 121.170174], [24.075177, 121.171519]], color: "#d946ef" }, 
-                    { id: 3, name: "壽亭新村", path: [[24.041546, 121.160913], [24.041602, 121.160722]], color: "#84cc16" }
+                    { id: 1, name: "幼獅道班", path: [[24.047794, 121.156327], [24.047738, 121.156339], [24.047594, 121.156146], [24.047389, 121.156134], [24.047223, 121.156014], [24.047111, 121.156036], [24.046650, 121.155947]], color: "#06b6d4" }, 
+                    { id: 2, name: "博望新村", path: [[24.075000, 121.170200], [24.074983, 121.170458], [24.074940, 121.170770], [24.074861, 121.171296], [24.075015, 121.171333], [24.075158, 121.171441]], color: "#d946ef" }, 
+                    { id: 3, name: "壽亭新村", path: [[24.041599, 121.160730], [24.041771, 121.160853], [24.041925, 121.160996], [24.042082, 121.161127], [24.042050, 121.161178], [24.041971, 121.161264], [24.041910, 121.161275], [24.041844, 121.161213], [24.041489, 121.160856]], color: "#84cc16" }
                 ] 
             }
         };
@@ -371,16 +337,14 @@
             try {
                 const res = await fetch(GOOGLE_APP_SCRIPT_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 破解跨域阻擋
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: 'get_status' })
                 });
 
-                // 檢查是否收到正常的 HTTP 狀態碼
                 if (!res.ok) {
                     throw new Error("HTTP 狀態碼異常：" + res.status);
                 }
 
-                // 嘗試將回傳結果轉為文字，以防後端報錯回傳了 HTML 錯誤頁面
                 const responseText = await res.text();
                 let result;
                 try {
@@ -391,7 +355,6 @@
                     return false;
                 }
 
-                // 成功取得資料
                 if (result.status === 'success' && result.data) {
                     inspectionState = result.data;
                     localStorage.setItem('nantou_inspection', JSON.stringify(inspectionState));
@@ -402,7 +365,6 @@
                 }
             } catch(e) {
                 console.error("Fetch Exception:", e);
-                // 網路斷線或 CORS 阻擋時會跑到這裡
                 alert("⚠️ 雲端連線完全中斷！\n\n原因可能是：\n1. index.html 裡的 GAS 網址沒有更新。\n2. 手機網路未開啟。\n3. 發佈時「誰可以存取」未設定為「所有人」。\n\n(詳細錯誤：" + e.message + ")");
                 return false;
             }
@@ -463,7 +425,6 @@
                 attribution: '&copy; OpenStreetMap', subdomains: 'abcd', maxZoom: 20 
             }).addTo(map);
             
-            // 點擊地圖空白處，自動關閉面板並恢復全地圖視野
             map.on('click', function() {
                 const bs = document.getElementById('bottom-sheet');
                 if(bs && !bs.classList.contains('hidden-sheet')) {
@@ -484,7 +445,7 @@
             loadTownship(currentTownshipId, true);
         }
 
-        // 🌟 電影級運鏡與高亮邏輯
+        // 🌟 電影級運鏡與高亮邏輯 (強制虛線版)
         function highlightRoute(townshipId, itemId) {
             Object.keys(routePolylines).forEach(key => {
                 const isDone = inspectionState[key];
@@ -492,7 +453,8 @@
                 routePolylines[key].setStyle({
                     color: isDone ? '#475569' : originalColor,
                     weight: 4,
-                    opacity: 0.25
+                    opacity: 0.25,
+                    dashArray: '10, 10' // 確保變暗時依然是虛線
                 });
             });
 
@@ -502,7 +464,8 @@
                 routePolylines[itemId].setStyle({
                     color: isDone ? '#94a3b8' : originalColor,
                     weight: 8,
-                    opacity: 1
+                    opacity: 1,
+                    dashArray: '15, 15' // 高亮時，虛線的間距拉大，視覺效果更粗更明顯
                 });
                 routePolylines[itemId].bringToFront(); 
                 
@@ -516,15 +479,16 @@
             }
         }
 
+        // 恢復所有路線狀態 (強制虛線版)
         function resetRouteHighlights() {
             Object.keys(routePolylines).forEach(k => {
                 const originalColor = routePolylines[k].options.originalColor;
-                const isDashed = routePolylines[k].options.isDashed;
                 const isDone = inspectionState[k];
                 routePolylines[k].setStyle({ 
-                    weight: isDashed ? 5 : 8, 
+                    weight: 5, 
                     color: isDone ? '#475569' : originalColor, 
-                    opacity: isDone ? 0.6 : 0.9 
+                    opacity: isDone ? 0.6 : 0.9,
+                    dashArray: '10, 10' // 恢復預設虛線狀態
                 });
             });
             if (currentBounds) map.flyToBounds(currentBounds, { padding: [50, 50], animate: true, duration: 1.2 });
@@ -577,22 +541,25 @@
             drawPOI(data.office, `${id}_office`); 
             drawPOI(data.restaurant, `${id}_restaurant`);
 
+            // 🌟 繪製巡檢路線 (全面強制使用虛線)
             data.routes.forEach(route => {
                 const itemId = `${id}_route_${route.id}`;
                 const isDone = inspectionState[itemId];
                 const routeColor = isDone ? '#475569' : route.color;
                 const opacity = isDone ? 0.6 : 0.9;
                 
+                // 抓取陣列的第一個點跟最後一個點當作起點和終點圖示
                 const startPt = route.path[0];
                 const endPt = route.path[route.path.length - 1];
-                
-                const isDashed = route.path.length === 2;
 
                 const polyline = L.polyline(route.path, { 
-                    color: routeColor, weight: isDashed ? 5 : 8, opacity: opacity, 
-                    dashArray: isDashed ? '10, 10' : null, 
-                    lineCap: 'round', lineJoin: 'round',
-                    originalColor: route.color, isDashed: isDashed
+                    color: routeColor, 
+                    weight: 5, // 統一粗細
+                    opacity: opacity, 
+                    dashArray: '10, 10', // 🌟 強制設定虛線：線長 10px，間距 10px
+                    lineCap: 'round', 
+                    lineJoin: 'round',
+                    originalColor: route.color
                 }).addTo(map);
                 
                 routePolylines[itemId] = polyline; 
@@ -679,13 +646,11 @@
             const newState = !inspectionState[currentItemId];
             const btn = document.getElementById('mark-btn');
 
-            // 1. 鎖定按鈕，顯示「同步中」以防止瞬間關閉導致中斷
             btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-amber-500/20 border-amber-500 text-amber-400 cursor-wait";
             document.getElementById('mark-text').innerHTML = '<i class="ph ph-spinner animate-spin"></i> 同步中...';
             btn.disabled = true;
 
             try {
-                // 2. 發送至雲端 (加入 headers 確保 CORS 暢通)
                 const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -705,7 +670,6 @@
                 }
 
                 if (result.status === 'success') {
-                    // 3. 雲端確認寫入後，才正式改變手機狀態與 UI
                     inspectionState[currentItemId] = newState;
                     saveState(); 
                     
@@ -723,7 +687,6 @@
                 console.error("狀態同步失敗", e);
                 alert("⚠️ 雲端同步失敗！\n\n原因可能是：\n1. 網路不穩或瞬間斷線。\n2. 您的 GAS 發佈權限未設定為「所有人」。\n3. 網址未更新。\n\n詳細錯誤：" + e.message);
                 
-                // 失敗則恢復原狀按鈕
                 const isDone = inspectionState[currentItemId];
                 if (isDone) {
                     btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-500/20 border-emerald-500 text-emerald-400 cursor-pointer";
@@ -787,7 +750,6 @@
             photos.forEach((photo) => {
                 if(!photo.uploaded) hasPending = true;
                 
-                // 🌟 照片「閱後即焚」UI：如果已上傳，原本沉重的 Base64 data 會被清空，畫面上改顯示打勾圖示
                 const imgContent = photo.data 
                     ? `<img src="${photo.data}" class="w-full h-full object-cover">`
                     : `<i class="ph-fill ph-image text-4xl text-slate-600"></i>`;
@@ -815,7 +777,6 @@
             renderPhotos();
         }
 
-        // 🌟 一鍵同步至 Google Drive (含閱後即焚釋放記憶體機制)
         async function uploadPhotosToDrive() {
             const photos = inspectionPhotos[currentItemId] || [];
             const pendingPhotos = photos.filter(p => !p.uploaded);
@@ -855,7 +816,7 @@
                     const result = await response.json();
                     if (result.status === "success") { 
                         photos[i].uploaded = true; 
-                        photos[i].data = ""; // 🌟 閱後即焚：清除龐大的 Base64 檔案，只保留已上傳的紀錄，完美解決手機卡死問題！
+                        photos[i].data = ""; 
                         successCount++; 
                     }
                 } catch (err) { console.error("上傳失敗", err); }
@@ -1070,7 +1031,6 @@
         async function checkPassword() {
             const inputVal = document.getElementById('pwd-input').value;
             if (inputVal === SYSTEM_PASSWORD) {
-                // 強制收起虛擬鍵盤，並將頁面滾動回最頂部
                 document.getElementById('pwd-input').blur();
                 window.scrollTo(0, 0);
 
@@ -1079,7 +1039,6 @@
                 const loginBtn = document.getElementById('btn-login');
                 if (loginBtn) loginBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> 同步雲端進度...';
                 
-                // 等待雲端進度同步，並捕捉是否成功 (加入警示機制)
                 const syncSuccess = await fetchSyncState();
                 if (!syncSuccess) {
                     alert("⚠️ 讀取雲端資料庫失敗！\n\n由於連線遭到 Google 阻擋，我們將暫時載入您手機中的舊有紀錄。\n請務必重新確認您的 GAS 權限是否有對外開放。");
