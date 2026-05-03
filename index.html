@@ -946,6 +946,39 @@
             }
         }
 
+        // 🌟 執行同步與進入主畫面 (供自動登入與手動登入共用)
+        async function performSyncAndEnter() {
+            const syncSuccess = await fetchSyncState();
+            if (!syncSuccess) alert("⚠️ 讀取雲端資料庫失敗！\n\n由於連線遭到 Google 阻擋，我們將暫時載入您手機中的舊有紀錄。\n請務必重新確認您的 GAS 權限是否有對外開放。");
+
+            const loginScreen = document.getElementById('login-screen');
+            if (loginScreen) {
+                loginScreen.style.opacity = '0';
+                setTimeout(() => loginScreen.style.display = 'none', 500);
+            }
+            
+            const splash = document.getElementById('splash-screen');
+            if (splash) {
+                splash.style.opacity = '0'; 
+                setTimeout(() => splash.style.visibility = 'hidden', 500);
+            }
+            
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+            if (!isStandalone && !localStorage.getItem('pwa_prompt_shown')) {
+                setTimeout(() => {
+                    const prompt = document.getElementById('pwa-prompt');
+                    if (prompt) { prompt.classList.remove('hidden'); setTimeout(() => prompt.classList.remove('translate-y-[-150%]'), 100); }
+                    localStorage.setItem('pwa_prompt_shown', 'true');
+                }, 2000);
+            }
+
+            if(map) map.invalidateSize(); 
+            if (currentBounds && map) map.fitBounds(currentBounds);
+            
+            // 預設載入第一個檔期 (5/15 路線一)
+            loadSchedule(scheduleData[0].id);
+        }
+
         async function checkPassword() {
             const pwdInput = document.getElementById('pwd-input');
             const pwdError = document.getElementById('pwd-error');
@@ -959,29 +992,10 @@
                 const loginBtn = document.getElementById('btn-login');
                 if (loginBtn) loginBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> 同步雲端進度...';
                 
-                const syncSuccess = await fetchSyncState();
-                if (!syncSuccess) alert("⚠️ 讀取雲端資料庫失敗！\n\n由於連線遭到 Google 阻擋，我們將暫時載入您手機中的舊有紀錄。\n請務必重新確認您的 GAS 權限是否有對外開放。");
-
-                const loginScreen = document.getElementById('login-screen');
-                if (loginScreen) loginScreen.style.opacity = '0';
+                // 🌟 永久記住密碼
+                localStorage.setItem('nantou_system_auth', 'true');
                 
-                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-                if (!isStandalone && !localStorage.getItem('pwa_prompt_shown')) {
-                    setTimeout(() => {
-                        const prompt = document.getElementById('pwa-prompt');
-                        if (prompt) { prompt.classList.remove('hidden'); setTimeout(() => prompt.classList.remove('translate-y-[-150%]'), 100); }
-                        localStorage.setItem('pwa_prompt_shown', 'true');
-                    }, 2000);
-                }
-
-                setTimeout(() => { 
-                    if (loginScreen) loginScreen.style.display = 'none'; 
-                    if(map) map.invalidateSize(); 
-                    if (currentBounds && map) map.fitBounds(currentBounds);
-                    
-                    // 預設載入第一個檔期 (5/15 路線一)
-                    loadSchedule(scheduleData[0].id);
-                }, 500);
+                await performSyncAndEnter();
             } else {
                 if (pwdError) pwdError.style.opacity = '1'; pwdInput.value = '';
             }
@@ -990,7 +1004,7 @@
         window.onload = () => {
             initMap();
             
-            // 🌟 動態生成：第一層 (13鄉鎮膠囊按鈕)
+            // 動態生成：第一層 (13鄉鎮膠囊按鈕)
             const townshipSelector = document.getElementById('township-selector');
             if (townshipSelector) {
                 Object.keys(mapData).forEach((id) => {
@@ -1003,7 +1017,7 @@
                 });
             }
 
-            // 🌟 動態生成：第二層 (6大任務卡片)
+            // 動態生成：第二層 (6大任務卡片)
             const scheduleSelector = document.getElementById('schedule-selector');
             if (scheduleSelector) {
                 scheduleData.forEach((s) => {
@@ -1018,7 +1032,20 @@
 
             const pwdInput = document.getElementById('pwd-input');
             if(pwdInput) pwdInput.addEventListener('keypress', e => { if (e.key === 'Enter') checkPassword(); });
-            setTimeout(() => { const splash = document.getElementById('splash-screen'); if (splash) { splash.style.opacity = '0'; splash.style.visibility = 'hidden'; } }, 2000); 
+            
+            // 🌟 檢查是否已記住密碼 (自動登入邏輯)
+            if (localStorage.getItem('nantou_system_auth') === 'true') {
+                const splashText = document.querySelector('#splash-screen .animate-pulse');
+                if(splashText) splashText.innerText = '自動登入中，同步雲端資料...';
+                
+                const loginScreen = document.getElementById('login-screen');
+                if (loginScreen) loginScreen.style.display = 'none'; // 直接隱藏登入頁
+                
+                performSyncAndEnter(); // 直接同步並進入地圖
+            } else {
+                // 如果沒有登入過，2秒後隱藏歡迎動畫，顯示登入畫面
+                setTimeout(() => { const splash = document.getElementById('splash-screen'); if (splash) { splash.style.opacity = '0'; splash.style.visibility = 'hidden'; } }, 2000); 
+            }
         };
         
         function locateUser() {
