@@ -3,48 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="清潔考核">
     <meta name="theme-color" content="#020617">
     
-    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22%E5%8D%97%E6%8A%95%E7%B8%A3%E6%B8%85%E6%BD%94%E8%80%83%E6%A0%B8%E7%B3%BB%E7%B5%B1%22%2C%22short_name%22%3A%22%E6%B8%85%E6%BD%94%E8%80%83%E6%A0%B8%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020617%22%2C%22theme_color%22%3A%22%23020617%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fapi.iconify.design%2Fph%2Fmap-pin-line-fill.svg%3Fcolor%3D%252322d3ee%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+    <!-- 針對 Apple iOS (iPhone) 的圖示設定 -->
+    <link rel="apple-touch-icon" href="app-icon.png">
+
+    <!-- 針對 Android 的圖示與 APP 設定 -->
+    <link rel="manifest" href="manifest.json">
 
     <title>南投縣清潔考核地圖系統</title>
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet Map CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
 
+        /* 🌟 核心佈局與防卡死設定 */
         html, body { 
-            width: 100vw; height: 100dvh; 
+            width: 100vw;
+            height: 100dvh; 
             font-family: 'Noto Sans TC', sans-serif; 
-            background-color: #020617; color: #f8fafc; 
-            margin: 0; padding: 0; overflow: hidden; 
+            background-color: #020617; 
+            color: #f8fafc; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
             overscroll-behavior: none; 
         }
 
-        .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .glass-panel { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7); }
+        .glass { 
+            background: rgba(15, 23, 42, 0.75); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+        }
+        
+        .glass-panel { 
+            background: rgba(30, 41, 59, 0.95); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px); 
+            border-top: 1px solid rgba(255, 255, 255, 0.15); 
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7); 
+        }
 
-        #splash-screen, #login-screen { transition: opacity 0.5s ease-in-out; }
+        /* 歡迎頁與登入頁動畫過渡效果 */
+        #splash-screen { transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out; }
+        #login-screen { transition: opacity 0.5s ease-in-out; }
+        
         .pulse-ring { animation: pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1); }
-        @keyframes pulse { 0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); } 100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } }
+        @keyframes pulse { 
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); } 
+            70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); } 
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } 
+        }
 
+        /* 地圖控制元件樣式覆寫 */
         .leaflet-control-attribution { display: none !important; }
         .leaflet-control-zoom { border: none !important; margin-top: 230px !important; }
         .leaflet-bar a { background-color: rgba(30, 41, 59, 0.8) !important; color: #06b6d4 !important; border-color: rgba(255,255,255,0.1) !important;}
 
+        /* 面板滑動過渡動畫 */
         .bottom-sheet { transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .bottom-sheet.hidden-sheet { transform: translateY(100%); }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
+        /* 自訂彈窗與標記樣式 */
         .glass-tooltip { background: rgba(15, 23, 42, 0.85) !important; backdrop-filter: blur(4px) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; color: #f8fafc !important; border-radius: 8px !important; padding: 5px 10px !important; font-size: 12px !important; font-weight: 500 !important; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important; white-space: nowrap !important; }
         .hide-tooltips .glass-tooltip { opacity: 0 !important; visibility: hidden !important; transition: opacity 0.3s ease; }
         
@@ -52,7 +89,10 @@
         .user-pulse { position: absolute; top: -8px; left: -8px; width: 32px; height: 32px; background-color: rgba(59, 130, 246, 0.6); border-radius: 50%; animation: user-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
         @keyframes user-ping { 75%, 100% { transform: scale(2); opacity: 0; } }
 
+        /* 針對 iOS 狀態列安全區域設計的頂部 Padding */
         .safe-top-padding { padding-top: max(1rem, env(safe-area-inset-top)); }
+        
+        /* 🌟 路線高亮與變暗的電影級過渡動畫 */
         path.leaflet-interactive { transition: stroke-opacity 0.6s ease, stroke-width 0.6s ease, stroke 0.6s ease; }
     </style>
 </head>
@@ -325,7 +365,7 @@
         let currentTownshipId = null;
         let currentItemId = null; 
 
-        // 🌟 新增：向 Google 雲端讀取團隊最新進度
+        // 🌟 向 Google 雲端讀取團隊最新進度
         async function fetchSyncState() {
             try {
                 const res = await fetch(GOOGLE_APP_SCRIPT_URL, {
@@ -342,7 +382,6 @@
             }
         }
 
-        // 儲存狀態並發送至雲端
         function saveState() {
             localStorage.setItem('nantou_inspection', JSON.stringify(inspectionState));
             try { 
@@ -614,7 +653,6 @@
             const newState = !inspectionState[currentItemId];
             inspectionState[currentItemId] = newState;
             
-            // 立即更新 UI，保持順暢感
             saveState(); 
             
             const btn = document.getElementById('mark-btn');
@@ -626,7 +664,6 @@
                 document.getElementById('mark-text').innerText = "未考核";
             }
 
-            // 在背景將最新狀態同步至 Google 雲端
             try {
                 fetch(GOOGLE_APP_SCRIPT_URL, {
                     method: 'POST',
@@ -709,7 +746,6 @@
             renderPhotos();
         }
 
-        // --- ☁️ 同步上傳至 Google Drive ---
         async function uploadPhotosToDrive() {
             const photos = inspectionPhotos[currentItemId] || [];
             const pendingPhotos = photos.filter(p => !p.uploaded);
@@ -737,7 +773,7 @@
                     const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
                         method: 'POST',
                         body: JSON.stringify({ 
-                            action: 'upload_photo', // 告訴後端這是上傳照片的指令
+                            action: 'upload_photo', 
                             township: townshipName, 
                             pointName: pointName, 
                             filename: fileName, 
@@ -956,26 +992,22 @@
             }
         }
 
-        // 🌟 登入與啟動 (包含視角歸零、收起鍵盤與雲端讀取)
         async function checkPassword() {
             const inputVal = document.getElementById('pwd-input').value;
             if (inputVal === SYSTEM_PASSWORD) {
-                // 1. 強制收起虛擬鍵盤，並將頁面滾動回最頂部 (解決 iPhone 跑版問題)
+                // 強制收起虛擬鍵盤，並將頁面滾動回最頂部
                 document.getElementById('pwd-input').blur();
                 window.scrollTo(0, 0);
 
                 document.getElementById('pwd-error').style.opacity = '0';
                 
-                // 按鈕改為載入中狀態
                 const loginBtn = document.getElementById('btn-login');
-                loginBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> 同步雲端進度...';
+                if (loginBtn) loginBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> 同步雲端進度...';
                 
-                // 2. 向雲端讀取最新團隊進度
                 await fetchSyncState();
 
-                // 3. 切換畫面
                 const loginScreen = document.getElementById('login-screen');
-                loginScreen.style.opacity = '0';
+                if (loginScreen) loginScreen.style.opacity = '0';
                 
                 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
                 if (!isStandalone && !localStorage.getItem('pwa_prompt_shown')) {
@@ -990,16 +1022,17 @@
                 }
 
                 setTimeout(() => { 
-                    loginScreen.style.display = 'none'; 
+                    if (loginScreen) loginScreen.style.display = 'none'; 
                     if(map) map.invalidateSize(); 
                     if (currentBounds && map) map.fitBounds(currentBounds);
                     
-                    // 根據雲端進度重繪地圖標記
                     loadTownship(currentTownshipId);
                 }, 500);
             } else {
-                document.getElementById('pwd-error').style.opacity = '1';
-                document.getElementById('pwd-input').value = '';
+                const pwdError = document.getElementById('pwd-error');
+                const pwdInput = document.getElementById('pwd-input');
+                if (pwdError) pwdError.style.opacity = '1';
+                if (pwdInput) pwdInput.value = '';
             }
         }
 
@@ -1018,7 +1051,6 @@
                 });
             }
             
-            // 預設先載入草屯的地圖 UI (狀態會等登入後覆蓋)
             loadTownship(Object.keys(mapData)[0]);
 
             const pwdInput = document.getElementById('pwd-input');
