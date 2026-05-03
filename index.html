@@ -365,20 +365,26 @@
         let currentTownshipId = null;
         let currentItemId = null; 
 
-        // 🌟 向 Google 雲端讀取團隊最新進度
+        // 🌟 向 Google 雲端讀取團隊最新進度 (加入 headers 確保暢通，捕捉錯誤防崩潰)
         async function fetchSyncState() {
             try {
                 const res = await fetch(GOOGLE_APP_SCRIPT_URL, {
                     method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: 'get_status' })
                 });
                 const result = await res.json();
                 if (result.status === 'success' && result.data) {
                     inspectionState = result.data;
                     localStorage.setItem('nantou_inspection', JSON.stringify(inspectionState));
+                    return true;
+                } else {
+                    console.error("雲端讀取失敗:", result.message);
+                    return false;
                 }
             } catch(e) {
                 console.error("雲端狀態同步失敗，使用本機狀態", e);
+                return false;
             }
         }
 
@@ -647,30 +653,57 @@
             document.getElementById('progress-bar').style.width = `${pct}%`;
         }
 
-        // 🌟 狀態同步：打卡時不僅本機記錄，還會背景發送到雲端
+        // 🌟 狀態同步：打卡時不僅本機記錄，還會嚴格等待確認雲端寫入，防止中斷
         async function toggleItemStatus() {
             if(!currentItemId) return;
             const newState = !inspectionState[currentItemId];
-            inspectionState[currentItemId] = newState;
-            
-            saveState(); 
-            
             const btn = document.getElementById('mark-btn');
-            if (newState) {
-                btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-500/20 border-emerald-500 text-emerald-400 cursor-pointer";
-                document.getElementById('mark-text').innerText = "已考核";
-            } else {
-                btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-slate-800 border-slate-600 text-slate-300 cursor-pointer";
-                document.getElementById('mark-text').innerText = "未考核";
-            }
+
+            // 1. 鎖定按鈕，顯示「同步中」以防止瞬間關閉導致中斷
+            btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-amber-500/20 border-amber-500 text-amber-400 cursor-wait";
+            document.getElementById('mark-text').innerHTML = '<i class="ph ph-spinner animate-spin"></i> 同步中...';
+            btn.disabled = true;
 
             try {
-                fetch(GOOGLE_APP_SCRIPT_URL, {
+                // 2. 發送至雲端 (加入 headers 確保 CORS 暢通)
+                const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
                     method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: 'set_status', itemId: currentItemId, isDone: newState })
                 });
+                
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // 3. 雲端確認寫入後，才正式改變手機狀態與 UI
+                    inspectionState[currentItemId] = newState;
+                    saveState(); 
+                    
+                    if (newState) {
+                        btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-500/20 border-emerald-500 text-emerald-400 cursor-pointer";
+                        document.getElementById('mark-text').innerText = "已考核";
+                    } else {
+                        btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-slate-800 border-slate-600 text-slate-300 cursor-pointer";
+                        document.getElementById('mark-text').innerText = "未考核";
+                    }
+                } else {
+                    throw new Error(result.message);
+                }
             } catch(e) {
                 console.error("狀態同步失敗", e);
+                alert("⚠️ 雲端同步失敗！\n請確認 GAS 網址正確且網路暢通。");
+                
+                // 失敗則恢復原狀
+                const isDone = inspectionState[currentItemId];
+                if (isDone) {
+                    btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-500/20 border-emerald-500 text-emerald-400 cursor-pointer";
+                    document.getElementById('mark-text').innerText = "已考核";
+                } else {
+                    btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-slate-800 border-slate-600 text-slate-300 cursor-pointer";
+                    document.getElementById('mark-text').innerText = "未考核";
+                }
+            } finally {
+                btn.disabled = false;
             }
         }
 
@@ -723,11 +756,17 @@
 
             photos.forEach((photo) => {
                 if(!photo.uploaded) hasPending = true;
+                
+                // 🌟 照片「閱後即焚」UI：如果已上傳，原本沉重的 Base64 data 會被清空，畫面上改顯示打勾圖示
+                const imgContent = photo.data 
+                    ? `<img src="${photo.data}" class="w-full h-full object-cover">`
+                    : `<i class="ph-fill ph-image text-4xl text-slate-600"></i>`;
+
                 grid.innerHTML += `
-                    <div class="relative w-full aspect-square rounded-lg border border-slate-600 overflow-hidden group">
-                        <img src="${photo.data}" class="w-full h-full object-cover">
+                    <div class="relative w-full aspect-square rounded-lg border border-slate-600 overflow-hidden group bg-slate-800 flex items-center justify-center">
+                        ${imgContent}
                         ${photo.uploaded 
-                            ? `<div class="absolute inset-0 bg-black/40 flex items-center justify-center"><i class="ph-fill ph-check-circle text-emerald-400 text-3xl drop-shadow-md"></i></div>` 
+                            ? `<div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1"><i class="ph-fill ph-check-circle text-emerald-400 text-3xl drop-shadow-md"></i><span class="text-[10px] font-bold text-emerald-400">已存雲端</span></div>` 
                             : `<button onclick="deletePhoto('${photo.id}')" class="absolute top-1 right-1 bg-red-500/80 text-white w-6 h-6 rounded-full flex items-center justify-center backdrop-blur cursor-pointer"><i class="ph-bold ph-x text-xs"></i></button>`
                         }
                     </div>
@@ -746,6 +785,7 @@
             renderPhotos();
         }
 
+        // 🌟 一鍵同步至 Google Drive (含閱後即焚釋放記憶體機制)
         async function uploadPhotosToDrive() {
             const photos = inspectionPhotos[currentItemId] || [];
             const pendingPhotos = photos.filter(p => !p.uploaded);
@@ -772,6 +812,7 @@
                 try {
                     const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
                         method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({ 
                             action: 'upload_photo', 
                             township: townshipName, 
@@ -782,7 +823,11 @@
                         })
                     });
                     const result = await response.json();
-                    if (result.status === "success") { photos[i].uploaded = true; successCount++; }
+                    if (result.status === "success") { 
+                        photos[i].uploaded = true; 
+                        photos[i].data = ""; // 🌟 閱後即焚：清除龐大的 Base64 檔案，只保留已上傳的紀錄，完美解決手機卡死問題！
+                        successCount++; 
+                    }
                 } catch (err) { console.error("上傳失敗", err); }
             }
 
@@ -793,7 +838,7 @@
                 btn.innerHTML = '<i class="ph-fill ph-cloud-arrow-up text-lg text-fuchsia-400"></i> 一鍵同步至 Google Drive';
             }
 
-            if(successCount === pendingPhotos.length) alert("✅ 所有新照片已成功上傳至雲端硬碟！");
+            if(successCount === pendingPhotos.length) alert("✅ 所有新照片已成功上傳至雲端硬碟！\n(原檔已從手機記憶體清除以節省空間)");
             else alert(`⚠️ 上傳完畢。成功: ${successCount} 張，失敗: ${pendingPhotos.length - successCount} 張。\n請稍後再試一次。`);
         }
 
@@ -1004,7 +1049,11 @@
                 const loginBtn = document.getElementById('btn-login');
                 if (loginBtn) loginBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> 同步雲端進度...';
                 
-                await fetchSyncState();
+                // 等待雲端進度同步，並捕捉是否成功 (加入警示機制)
+                const syncSuccess = await fetchSyncState();
+                if (!syncSuccess) {
+                    alert("⚠️ 雲端資料庫連線異常！\n1. 請確認 index.html 中的 GAS 網址是否正確更新。\n2. 請確認手機網路暢通。\n(為確保流程順利，目前將暫時使用本機舊紀錄顯示)");
+                }
 
                 const loginScreen = document.getElementById('login-screen');
                 if (loginScreen) loginScreen.style.opacity = '0';
