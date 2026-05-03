@@ -1,0 +1,15 @@
+{
+  "name": "南投縣清潔考核地圖系統",
+  "short_name": "清潔考核",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
