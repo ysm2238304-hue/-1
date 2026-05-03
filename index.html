@@ -247,8 +247,9 @@
          JavaScript 詳細設定與核心邏輯 
          ========================================== -->
     <script>
-        // 🚨 您的專屬 GAS 網址 (支援狀態同步與照片上傳)
+        // 🚨 您的專屬 GAS 網址 (請務必將下方的網址替換成您最新發佈的 URL！)
         const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkClBmpcbfVL62Fyt0cDv3vzSF8ygo6_pMQtm6x2cCSiUGi3qaRLJ9i6ZKo-rcn9r2/exec"; 
+        
         const SYSTEM_PASSWORD = "54004658";
 
         // --- 完整 13 鄉鎮市資料庫 (精準展開) ---
@@ -365,15 +366,32 @@
         let currentTownshipId = null;
         let currentItemId = null; 
 
-        // 🌟 向 Google 雲端讀取團隊最新進度 (加入 headers 確保暢通，捕捉錯誤防崩潰)
+        // 🌟 深度防錯系統：向 Google 雲端讀取團隊最新進度
         async function fetchSyncState() {
             try {
                 const res = await fetch(GOOGLE_APP_SCRIPT_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 破解跨域阻擋
                     body: JSON.stringify({ action: 'get_status' })
                 });
-                const result = await res.json();
+
+                // 檢查是否收到正常的 HTTP 狀態碼
+                if (!res.ok) {
+                    throw new Error("HTTP 狀態碼異常：" + res.status);
+                }
+
+                // 嘗試將回傳結果轉為文字，以防後端報錯回傳了 HTML 錯誤頁面
+                const responseText = await res.text();
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch(parseError) {
+                    console.error("雲端回傳的不是 JSON 格式:", responseText);
+                    alert("⚠️ 雲端權限設定錯誤！\nGoogle 伺服器拒絕了存取請求。\n\n請確認您發佈 GAS 時，【誰可以存取】是否有設定為【所有人 (Anyone)】。");
+                    return false;
+                }
+
+                // 成功取得資料
                 if (result.status === 'success' && result.data) {
                     inspectionState = result.data;
                     localStorage.setItem('nantou_inspection', JSON.stringify(inspectionState));
@@ -383,7 +401,9 @@
                     return false;
                 }
             } catch(e) {
-                console.error("雲端狀態同步失敗，使用本機狀態", e);
+                console.error("Fetch Exception:", e);
+                // 網路斷線或 CORS 阻擋時會跑到這裡
+                alert("⚠️ 雲端連線完全中斷！\n\n原因可能是：\n1. index.html 裡的 GAS 網址沒有更新。\n2. 手機網路未開啟。\n3. 發佈時「誰可以存取」未設定為「所有人」。\n\n(詳細錯誤：" + e.message + ")");
                 return false;
             }
         }
@@ -672,7 +692,17 @@
                     body: JSON.stringify({ action: 'set_status', itemId: currentItemId, isDone: newState })
                 });
                 
-                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error("HTTP 狀態碼異常：" + response.status);
+                }
+
+                const responseText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch(e) {
+                    throw new Error("雲端回傳非預期格式，這通常是 GAS 權限未設為【所有人】造成的攔截。");
+                }
 
                 if (result.status === 'success') {
                     // 3. 雲端確認寫入後，才正式改變手機狀態與 UI
@@ -691,9 +721,9 @@
                 }
             } catch(e) {
                 console.error("狀態同步失敗", e);
-                alert("⚠️ 雲端同步失敗！\n請確認 GAS 網址正確且網路暢通。");
+                alert("⚠️ 雲端同步失敗！\n\n原因可能是：\n1. 網路不穩或瞬間斷線。\n2. 您的 GAS 發佈權限未設定為「所有人」。\n3. 網址未更新。\n\n詳細錯誤：" + e.message);
                 
-                // 失敗則恢復原狀
+                // 失敗則恢復原狀按鈕
                 const isDone = inspectionState[currentItemId];
                 if (isDone) {
                     btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-500/20 border-emerald-500 text-emerald-400 cursor-pointer";
@@ -1052,7 +1082,7 @@
                 // 等待雲端進度同步，並捕捉是否成功 (加入警示機制)
                 const syncSuccess = await fetchSyncState();
                 if (!syncSuccess) {
-                    alert("⚠️ 雲端資料庫連線異常！\n1. 請確認 index.html 中的 GAS 網址是否正確更新。\n2. 請確認手機網路暢通。\n(為確保流程順利，目前將暫時使用本機舊紀錄顯示)");
+                    alert("⚠️ 讀取雲端資料庫失敗！\n\n由於連線遭到 Google 阻擋，我們將暫時載入您手機中的舊有紀錄。\n請務必重新確認您的 GAS 權限是否有對外開放。");
                 }
 
                 const loginScreen = document.getElementById('login-screen');
