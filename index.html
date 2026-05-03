@@ -27,6 +27,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
 
+        /* 🌟 核心佈局優化 */
         html, body { 
             width: 100vw;
             height: 100dvh; 
@@ -81,7 +82,7 @@
 
         .safe-top-padding { padding-top: max(1rem, env(safe-area-inset-top)); }
         
-        /* 路線高亮時的過渡動畫 */
+        /* 路線高亮過渡動畫 */
         path.leaflet-interactive { transition: stroke-opacity 0.5s ease, stroke-width 0.5s ease; }
     </style>
 </head>
@@ -108,7 +109,7 @@
             <p class="text-slate-400 text-sm mb-6">請輸入授權碼以存取資料</p>
             <input type="password" id="pwd-input" placeholder="請輸入密碼" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white text-center tracking-widest focus:outline-none focus:border-cyan-400 mb-2 transition-colors">
             <p id="pwd-error" class="text-red-400 text-xs mb-4 h-4 opacity-0 transition-opacity">密碼錯誤，請重新輸入</p>
-            <button onclick="checkPassword()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all active:scale-95 tracking-widest">
+            <button onclick="checkPassword()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all active:scale-95 tracking-widest cursor-pointer">
                 進入系統
             </button>
         </div>
@@ -121,14 +122,53 @@
             <h4 class="font-bold mb-1">將系統加入主畫面</h4>
             <p class="text-sm opacity-90 leading-tight">點擊瀏覽器下方的「分享」按鈕，選擇「加入主畫面」，即可像 App 一樣全螢幕使用！</p>
         </div>
-        <button onclick="document.getElementById('pwa-prompt').classList.add('hidden')" class="text-white opacity-70 hover:opacity-100"><i class="ph ph-x text-lg"></i></button>
+        <button onclick="document.getElementById('pwa-prompt').classList.add('hidden')" class="text-white opacity-70 hover:opacity-100 cursor-pointer"><i class="ph ph-x text-lg"></i></button>
     </div>
 
     <!-- 2. 主畫面 (地圖容器) -->
     <div id="map" class="absolute inset-0 z-0"></div>
 
-    <!-- 2.5 清單模式 (List View) -->
-    <div id="list-view" class="absolute inset-0 z-[5] bg-slate-950 overflow-y-auto hidden pt-[210px] pb-10 px-4">
+    <!-- 🌟 3. 獨立頂部選單區塊 (徹底解決 iOS Safari 點擊失效 Bug) -->
+    <div id="top-bar" class="absolute top-0 left-0 w-full safe-top-padding px-4 pb-3 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent z-[50]">
+        
+        <div class="flex items-center justify-between mb-3 mt-2">
+            <h2 class="text-xl font-bold flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+                <i class="ph-fill ph-target text-cyan-400"></i>
+                <span id="header-title">請選擇鄉鎮</span>
+            </h2>
+            <div class="flex gap-2">
+                <button class="glass w-10 h-10 rounded-full text-slate-300 hover:text-white flex justify-center items-center cursor-pointer" onclick="toggleView()" id="btn-toggle-view">
+                    <i class="ph-fill ph-list text-xl"></i>
+                </button>
+                <button class="glass w-10 h-10 rounded-full text-slate-300 hover:text-white flex justify-center items-center cursor-pointer" onclick="map.fitBounds(currentBounds)">
+                    <i class="ph ph-corners-out text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="relative w-full mb-3">
+            <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+            <input type="text" id="search-input" placeholder="搜尋南投縣考核路線或地點..." class="w-full bg-slate-800/80 border border-slate-700 rounded-full pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors" oninput="handleSearch()">
+            <div id="search-results" class="absolute top-full left-0 right-0 mt-1 bg-slate-800 rounded-xl shadow-2xl z-[60] hidden max-h-48 overflow-y-auto border border-slate-700"></div>
+        </div>
+        
+        <div class="flex gap-3 overflow-x-auto no-scrollbar py-2 mb-2 w-full" style="-webkit-overflow-scrolling: touch; touch-action: pan-x;" id="township-selector">
+            <!-- JavaScript 動態生成按鈕 -->
+        </div>
+
+        <div class="w-full px-1">
+            <div class="flex justify-between text-[11px] text-slate-400 font-bold mb-1">
+                <span id="progress-text">本區考核進度：0/5</span>
+                <span id="progress-percent" class="text-cyan-400">0%</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div id="progress-bar" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 清單模式 (List View) -->
+    <div id="list-view" class="absolute inset-0 z-[45] bg-slate-950 overflow-y-auto hidden pt-[210px] pb-10 px-4">
         <h3 class="text-lg font-bold text-cyan-400 mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
             <i class="ph-fill ph-list-bullets"></i> 今日行程清單
         </h3>
@@ -137,94 +177,52 @@
         </div>
     </div>
 
-    <!-- 3. UI 覆蓋層 -->
-    <div id="ui-layer" class="absolute inset-0 z-10 pointer-events-none">
+    <!-- 5. 獨立底部面板區塊 -->
+    <div id="bottom-sheet" class="absolute bottom-0 left-0 bottom-sheet hidden-sheet glass-panel w-full rounded-t-3xl p-5 pb-8 shadow-2xl max-h-[85vh] overflow-y-auto flex flex-col z-[60]">
+        <div class="w-12 h-1.5 bg-slate-600 rounded-full mx-auto mb-4 shrink-0 cursor-pointer" onclick="hideBottomSheet()"></div>
         
-        <!-- 頂部區塊 -->
-        <div class="pointer-events-auto absolute top-0 left-0 w-full safe-top-padding px-4 pb-3 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent z-[50]">
-            
-            <div class="flex items-center justify-between mb-3 mt-2">
-                <h2 class="text-xl font-bold flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
-                    <i class="ph-fill ph-target text-cyan-400"></i>
-                    <span id="header-title">請選擇鄉鎮</span>
-                </h2>
-                <div class="flex gap-2">
-                    <button class="glass w-10 h-10 rounded-full text-slate-300 hover:text-white flex justify-center items-center cursor-pointer" onclick="toggleView()" id="btn-toggle-view">
-                        <i class="ph-fill ph-list text-xl"></i>
-                    </button>
-                    <button class="glass w-10 h-10 rounded-full text-slate-300 hover:text-white flex justify-center items-center cursor-pointer" onclick="map.fitBounds(currentBounds)">
-                        <i class="ph ph-corners-out text-xl"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="relative w-full mb-3">
-                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                <input type="text" id="search-input" placeholder="搜尋南投縣考核路線或地點..." class="w-full bg-slate-800/80 border border-slate-700 rounded-full pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors" oninput="handleSearch()">
-                <div id="search-results" class="absolute top-full left-0 right-0 mt-1 bg-slate-800 rounded-xl shadow-2xl z-[60] hidden max-h-48 overflow-y-auto border border-slate-700"></div>
-            </div>
-            
-            <div class="flex gap-3 overflow-x-auto no-scrollbar py-2 mb-2 w-full" style="-webkit-overflow-scrolling: touch;" id="township-selector">
-                <!-- JavaScript 動態生成按鈕 -->
-            </div>
-
-            <div class="w-full px-1">
-                <div class="flex justify-between text-[11px] text-slate-400 font-bold mb-1">
-                    <span id="progress-text">本區考核進度：0/5</span>
-                    <span id="progress-percent" class="text-cyan-400">0%</span>
-                </div>
-                <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                    <div id="progress-bar" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 底部資訊與面板 -->
-        <div id="bottom-sheet" class="pointer-events-auto absolute bottom-0 left-0 bottom-sheet hidden-sheet glass-panel w-full rounded-t-3xl p-5 pb-8 shadow-2xl max-h-[85vh] overflow-y-auto flex flex-col z-[40]">
-            <div class="w-12 h-1.5 bg-slate-600 rounded-full mx-auto mb-4 shrink-0 cursor-pointer" onclick="hideBottomSheet()"></div>
-            
-            <div id="sheet-content" class="flex-1">
-                <div class="flex justify-between items-start mb-2">
-                    <h3 class="text-xl font-bold text-white pr-2" id="sheet-title">點位名稱</h3>
-                    <button id="mark-btn" class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all border cursor-pointer" onclick="toggleItemStatus()">
-                        <i class="ph-fill ph-check-circle text-lg"></i> <span id="mark-text">未考核</span>
-                    </button>
-                </div>
-                
-                <!-- 詳細資訊區塊 -->
-                <div class="text-sm text-slate-400 mb-5 w-full" id="sheet-desc">詳細資訊</div>
-                
-                <!-- 照片上傳區 -->
-                <div class="mb-5 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                    <div class="flex justify-between items-center mb-3">
-                        <h4 class="text-sm font-bold text-slate-300 flex items-center gap-2">
-                            <i class="ph-fill ph-camera text-cyan-400"></i> 照片上傳區
-                        </h4>
-                        <label class="bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold py-1.5 px-3 rounded-lg flex items-center gap-1 cursor-pointer transition-colors shadow-lg">
-                            <i class="ph ph-upload-simple text-base"></i> 上傳/拍攝
-                            <input type="file" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload(event)">
-                        </label>
-                    </div>
-                    
-                    <div id="photo-preview-grid" class="grid grid-cols-3 gap-2 mb-3 empty:hidden"></div>
-
-                    <button id="btn-upload-drive" onclick="uploadPhotosToDrive()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-sm font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors mt-2 cursor-pointer">
-                        <i class="ph-fill ph-cloud-arrow-up text-lg text-fuchsia-400"></i> 一鍵同步至 Google Drive
-                    </button>
-                </div>
-
-                <!-- 傳統單一點位導航按鈕 (僅公所、餐廳會顯示) -->
-                <button id="nav-btn" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 hidden cursor-pointer">
-                    <i class="ph-fill ph-navigation-arrow text-xl"></i>
-                    <span>開啟 Google Maps 導航</span>
+        <div id="sheet-content" class="flex-1">
+            <div class="flex justify-between items-start mb-2">
+                <h3 class="text-xl font-bold text-white pr-2" id="sheet-title">點位名稱</h3>
+                <button id="mark-btn" class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all border cursor-pointer" onclick="toggleItemStatus()">
+                    <i class="ph-fill ph-check-circle text-lg"></i> <span id="mark-text">未考核</span>
                 </button>
             </div>
-        </div>
+            
+            <div class="text-sm text-slate-400 mb-5 w-full" id="sheet-desc">詳細資訊</div>
+            
+            <!-- 照片上傳區 -->
+            <div class="mb-5 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                        <i class="ph-fill ph-camera text-cyan-400"></i> 照片上傳區
+                    </h4>
+                    <!-- 支援手機相簿多圖上傳與相機拍攝 -->
+                    <label class="bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold py-1.5 px-3 rounded-lg flex items-center gap-1 cursor-pointer transition-colors shadow-lg">
+                        <i class="ph ph-upload-simple text-base"></i> 上傳/拍攝
+                        <input type="file" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload(event)">
+                    </label>
+                </div>
+                
+                <div id="photo-preview-grid" class="grid grid-cols-3 gap-2 mb-3 empty:hidden"></div>
 
-        <button id="locate-btn" class="pointer-events-auto absolute bottom-8 right-4 z-[40] glass p-3 rounded-full text-cyan-400 hover:text-white shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all active:scale-95 cursor-pointer" onclick="locateUser()">
-            <i class="ph-fill ph-crosshair text-2xl"></i>
-        </button>
+                <button id="btn-upload-drive" onclick="uploadPhotosToDrive()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-sm font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors mt-2 cursor-pointer">
+                    <i class="ph-fill ph-cloud-arrow-up text-lg text-fuchsia-400"></i> 一鍵同步至 Google Drive
+                </button>
+            </div>
+
+            <!-- 單一點位導航按鈕 -->
+            <button id="nav-btn" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 hidden cursor-pointer">
+                <i class="ph-fill ph-navigation-arrow text-xl"></i>
+                <span>開啟 Google Maps 導航</span>
+            </button>
+        </div>
     </div>
+
+    <!-- 6. 實時定位按鈕 -->
+    <button id="locate-btn" class="absolute bottom-8 right-4 z-[40] glass p-3 rounded-full text-cyan-400 hover:text-white shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all active:scale-95 cursor-pointer" onclick="locateUser()">
+        <i class="ph-fill ph-crosshair text-2xl"></i>
+    </button>
 
     <!-- ==========================================
          JavaScript 詳細設定與核心邏輯 
@@ -235,9 +233,11 @@
         
         const SYSTEM_PASSWORD = "54004658";
 
-        // 🗺️ 引擎升級：完整 13 鄉鎮市資料庫 
-        // 核心進化：將原本的 start/end 改為支援 KML 陣列的 `path` 結構！
-        // 現在系統會繪製粗實線。未來只要將 KML 中的 LineString 座標貼入 path 中，就能完美顯示真實彎曲路徑！
+        // ★ KML 真實軌跡擴充說明 ★
+        // 目前資料庫使用 [起點, 終點] 兩點陣列。智慧引擎偵測到只有2個點時，會自動畫出「虛線」。
+        // 如果您有 KML 的 <LineString> 座標，請將幾十個節點的經緯度貼入 path 陣列中
+        // 例如：path: [[23.97, 120.68], [23.98, 120.69], [23.99, 120.70], ...]
+        // 只要超過 2 個點，系統就會自動將它畫成沿著馬路彎曲的「實體粗線」！
         const mapData = {
             "caotun": { 
                 name: "草屯鎮", office: { name: "草屯鎮公所", lat: 23.973684, lng: 120.680282, type: "office" }, restaurant: { name: "考核聚餐餐廳 (草屯)", lat: 23.975684, lng: 120.682282, type: "restaurant" }, 
@@ -360,7 +360,6 @@
             }
             updateProgressBar();
             if(!isListView) {
-                // 為了保留高亮狀態，改為局部更新狀態而不是重繪整個 township
                 updateMarkersStatus();
             } else {
                 renderListView(); 
@@ -370,7 +369,7 @@
         // --- 地圖核心 ---
         let map;
         let activeLayers = [];
-        let routePolylines = {}; // 專門存放路線圖層，用來做高亮控制
+        let routePolylines = {}; 
         let currentBounds = null;
         let userMarker = null;
         let isListView = false;
@@ -409,14 +408,12 @@
             }).addTo(map);
         }
 
-        // 局部更新圖示與線條狀態 (避免重繪導致高亮失效)
         function updateMarkersStatus() {
             loadTownship(currentTownshipId, true);
         }
 
         // 🌟 電影級運鏡與高亮邏輯
         function highlightRoute(townshipId, itemId) {
-            // 1. 把所有路線變暗
             Object.keys(routePolylines).forEach(key => {
                 const isDone = inspectionState[key];
                 const originalColor = routePolylines[key].options.originalColor;
@@ -427,7 +424,6 @@
                 });
             });
 
-            // 2. 把選中的路線變亮、變粗
             if (routePolylines[itemId]) {
                 const isDone = inspectionState[itemId];
                 const originalColor = routePolylines[itemId].options.originalColor;
@@ -436,12 +432,12 @@
                     weight: 8,
                     opacity: 1
                 });
-                routePolylines[itemId].bringToFront(); // 確保亮線在最上層
+                routePolylines[itemId].bringToFront(); 
                 
-                // 3. 電影級平滑對焦：將鏡頭移動並避開底部的卡片 (下留白 50vh)
+                // 完美避開頂部選單與底部卡片的平滑對焦
                 map.flyToBounds(routePolylines[itemId].getBounds(), {
-                    paddingTopLeft: [30, 100], // 避開頂部選單
-                    paddingBottomRight: [30, window.innerHeight * 0.55], // 完美避開底部展開的卡片
+                    paddingTopLeft: [30, 220], 
+                    paddingBottomRight: [30, window.innerHeight * 0.45], 
                     maxZoom: 16,
                     animate: true,
                     duration: 1.2
@@ -470,25 +466,23 @@
                 routePolylines = {};
                 hideBottomSheet(); 
             } else {
-                // 如果是狀態切換，我們只重繪，不改變視角
                 activeLayers.forEach(layer => map.removeLayer(layer)); 
                 activeLayers = [];
                 routePolylines = {};
             }
 
             updateProgressBar();
-
             const bounds = [];
             
-            // 繪製單一點位
             const drawPOI = (poi, itemId) => {
                 const isDone = inspectionState[itemId];
                 const marker = L.marker([poi.lat, poi.lng], { icon: getIcons(isDone)[poi.type] }).addTo(map);
                 
                 marker.on('click', () => {
-                    // 點擊單點時恢復所有路線顏色並聚焦
                     Object.keys(routePolylines).forEach(k => {
-                        routePolylines[k].setStyle({ weight: 6, opacity: inspectionState[k] ? 0.6 : 0.9 });
+                        const originalColor = routePolylines[k].options.originalColor;
+                        const isDashed = routePolylines[k].options.isDashed;
+                        routePolylines[k].setStyle({ weight: isDashed ? 5 : 8, color: inspectionState[k] ? '#475569' : originalColor, opacity: inspectionState[k] ? 0.6 : 0.9 });
                     });
                     map.flyTo([poi.lat, poi.lng], 16, { animate: true, duration: 1.2 });
                     showBottomSheet(poi.name, `類型：${poi.type === 'office' ? '鄉鎮公所' : '聚餐餐廳'}`, poi.lat, poi.lng, itemId);
@@ -506,7 +500,7 @@
             drawPOI(data.office, `${id}_office`); 
             drawPOI(data.restaurant, `${id}_restaurant`);
 
-            // 🌟 繪製 KML 實體路線
+            // 🌟 智慧判斷引擎：畫出虛線或真實 KML 實體路線
             data.routes.forEach(route => {
                 const itemId = `${id}_route_${route.id}`;
                 const isDone = inspectionState[itemId];
@@ -515,29 +509,31 @@
                 
                 const startPt = route.path[0];
                 const endPt = route.path[route.path.length - 1];
+                
+                // 智慧判斷：如果只有2點就是虛線，超過2點就判定為KML真實實線
+                const isDashed = route.path.length === 2;
 
-                // 畫出粗實線 (準備迎接多節點的 KML LineString)
                 const polyline = L.polyline(route.path, { 
                     color: routeColor, 
-                    weight: 6, 
+                    weight: isDashed ? 5 : 8, // 實線更粗
                     opacity: opacity, 
+                    dashArray: isDashed ? '10, 10' : null, // 完美還原虛線視覺
                     lineCap: 'round', 
                     lineJoin: 'round',
-                    originalColor: route.color // 紀錄原色以備高亮使用
+                    originalColor: route.color,
+                    isDashed: isDashed
                 }).addTo(map);
                 
-                routePolylines[itemId] = polyline; // 加入高亮管理池
+                routePolylines[itemId] = polyline; 
 
                 const startMarker = L.marker(startPt, { icon: getIcons(isDone).start }).addTo(map);
                 const endMarker = L.marker(endPt, { icon: getIcons(isDone).end }).addTo(map);
 
-                // 🌟 優化：路線起終點分離的雙卡片 UI
                 const openSheet = () => {
-                    highlightRoute(id, itemId); // 觸發電影級運鏡
+                    highlightRoute(id, itemId); 
 
                     const descHTML = `
                         <div class="flex flex-col gap-2 mt-1 mb-3">
-                            <!-- 起點獨立卡片 -->
                             <div class="bg-slate-800/90 p-3 rounded-xl border border-emerald-500/30 flex items-center justify-between shadow-lg relative overflow-hidden">
                                 <div class="absolute -right-4 -top-4 w-16 h-16 bg-emerald-500/10 rounded-full"></div>
                                 <div class="flex items-center gap-3 relative z-10">
@@ -547,13 +543,11 @@
                                         <div class="text-[11px] text-slate-400 font-mono mt-0.5">${startPt[0].toFixed(5)}, ${startPt[1].toFixed(5)}</div>
                                     </div>
                                 </div>
-                                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${startPt[0]},${startPt[1]}', '_blank')" class="bg-emerald-600 hover:bg-emerald-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-95 relative z-10 shrink-0"><i class="ph-bold ph-navigation-arrow text-lg"></i></button>
+                                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${startPt[0]},${startPt[1]}', '_blank')" class="bg-emerald-600 hover:bg-emerald-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-95 relative z-10 shrink-0 cursor-pointer"><i class="ph-bold ph-navigation-arrow text-lg"></i></button>
                             </div>
                             
-                            <!-- 視覺連接線 -->
                             <div class="w-1 h-3 bg-gradient-to-b from-emerald-500/50 to-rose-500/50 mx-auto rounded-full"></div>
                             
-                            <!-- 終點獨立卡片 -->
                             <div class="bg-slate-800/90 p-3 rounded-xl border border-rose-500/30 flex items-center justify-between shadow-lg relative overflow-hidden">
                                 <div class="absolute -right-4 -top-4 w-16 h-16 bg-rose-500/10 rounded-full"></div>
                                 <div class="flex items-center gap-3 relative z-10">
@@ -563,11 +557,10 @@
                                         <div class="text-[11px] text-slate-400 font-mono mt-0.5">${endPt[0].toFixed(5)}, ${endPt[1].toFixed(5)}</div>
                                     </div>
                                 </div>
-                                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${endPt[0]},${endPt[1]}', '_blank')" class="bg-rose-600 hover:bg-rose-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-95 relative z-10 shrink-0"><i class="ph-bold ph-navigation-arrow text-lg"></i></button>
+                                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${endPt[0]},${endPt[1]}', '_blank')" class="bg-rose-600 hover:bg-rose-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-95 relative z-10 shrink-0 cursor-pointer"><i class="ph-bold ph-navigation-arrow text-lg"></i></button>
                             </div>
                         </div>
                     `;
-                    // 傳入 true 隱藏最底下的舊版導航大按鈕
                     showBottomSheet(route.name, descHTML, 0, 0, itemId, true);
                 };
                 
@@ -586,7 +579,6 @@
                 currentBounds = L.latLngBounds(bounds);
                 map.fitBounds(currentBounds, { padding: [50, 50], animate: true, duration: 1 });
             } else if (currentItemId && currentItemId.includes('_route_')) {
-                // 如果是打卡狀態改變，保持高亮
                 highlightRoute(currentTownshipId, currentItemId);
             }
         }
@@ -612,9 +604,8 @@
         function toggleItemStatus() {
             if(!currentItemId) return;
             inspectionState[currentItemId] = !inspectionState[currentItemId];
-            saveState(); // saveState 會呼叫 loadTownship 進行局部重繪
+            saveState(); 
             
-            // 更新按鈕樣式
             const isDone = inspectionState[currentItemId];
             const btn = document.getElementById('mark-btn');
             if (isDone) {
@@ -626,7 +617,6 @@
             }
         }
 
-        // --- 📷 照片上傳與預覽 ---
         function handlePhotoUpload(event) {
             const files = event.target.files;
             if(!files.length || !currentItemId) return;
@@ -634,7 +624,6 @@
             if (!inspectionPhotos[currentItemId]) inspectionPhotos[currentItemId] = [];
             const grid = document.getElementById('photo-preview-grid');
             
-            // 🌟 照片準備狀態提示
             grid.innerHTML += `<div class="col-span-3 text-center text-emerald-400 text-sm py-2 font-bold animate-pulse" id="loading-txt"><i class="ph ph-spinner animate-spin"></i> 照片已準備上傳...</div>`;
 
             let processed = 0;
@@ -688,7 +677,6 @@
                 `;
             });
 
-            // 🌟 更明顯的同步提醒
             if(hasPending) {
                 grid.innerHTML += `<div class="col-span-3 text-center text-emerald-400 text-sm py-1 mt-1 font-bold animate-pulse"><i class="ph-fill ph-check-circle"></i> 照片已暫存，請點擊下方按鈕同步</div>`;
             }
@@ -701,7 +689,6 @@
             renderPhotos();
         }
 
-        // --- ☁️ 後端串接：同步上傳至 Google Drive ---
         async function uploadPhotosToDrive() {
             const photos = inspectionPhotos[currentItemId] || [];
             const pendingPhotos = photos.filter(p => !p.uploaded);
@@ -740,7 +727,6 @@
             else alert(`⚠️ 上傳完畢。成功: ${successCount} 張，失敗: ${pendingPhotos.length - successCount} 張。\n請稍後再試一次。`);
         }
 
-        // --- 面板控制 ---
         const bottomSheet = document.getElementById('bottom-sheet');
         
         function showBottomSheet(title, desc, lat, lng, itemId, isRoute = false) {
@@ -762,7 +748,6 @@
             renderPhotos();
             
             const navBtn = document.getElementById('nav-btn');
-            // 如果是路線(isRoute=true)，隱藏舊版單一導航大按鈕；如果是公所/餐廳，則顯示
             if (isRoute) {
                 navBtn.classList.add('hidden');
             } else {
@@ -777,13 +762,17 @@
             bottomSheet.classList.add('hidden-sheet'); 
             currentItemId = null; 
             
-            // 恢復所有路線的顏色
             Object.keys(routePolylines).forEach(k => {
-                routePolylines[k].setStyle({ weight: 6, opacity: inspectionState[k] ? 0.6 : 0.9 });
+                const originalColor = routePolylines[k].options.originalColor;
+                const isDashed = routePolylines[k].options.isDashed;
+                routePolylines[k].setStyle({ 
+                    weight: isDashed ? 5 : 8, 
+                    color: inspectionState[k] ? '#475569' : originalColor, 
+                    opacity: inspectionState[k] ? 0.6 : 0.9 
+                });
             });
         }
 
-        // --- 清單與搜尋 ---
         function toggleView() {
             isListView = !isListView;
             const listEl = document.getElementById('list-view');
@@ -843,7 +832,6 @@
             if (isListView) toggleView();
             if (tId !== currentTownshipId) loadTownship(tId);
             
-            // 透過 ID 觸發點擊邏輯，達成電影級過場
             if (itemId.includes('_route_')) {
                 const routeId = parseInt(itemId.split('_route_')[1]);
                 const route = mapData[tId].routes.find(r => r.id === routeId);
@@ -861,7 +849,7 @@
                                     <div class="text-[11px] text-slate-400 font-mono mt-0.5">${startPt[0].toFixed(5)}, ${startPt[1].toFixed(5)}</div>
                                 </div>
                             </div>
-                            <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${startPt[0]},${startPt[1]}', '_blank')" class="bg-emerald-600 hover:bg-emerald-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-95 relative z-10 shrink-0"><i class="ph-bold ph-navigation-arrow text-lg"></i></button>
+                            <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${startPt[0]},${startPt[1]}', '_blank')" class="bg-emerald-600 hover:bg-emerald-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-95 relative z-10 shrink-0 cursor-pointer"><i class="ph-bold ph-navigation-arrow text-lg"></i></button>
                         </div>
                         <div class="w-1 h-3 bg-gradient-to-b from-emerald-500/50 to-rose-500/50 mx-auto rounded-full"></div>
                         <div class="bg-slate-800/90 p-3 rounded-xl border border-rose-500/30 flex items-center justify-between shadow-lg relative overflow-hidden">
@@ -873,7 +861,7 @@
                                     <div class="text-[11px] text-slate-400 font-mono mt-0.5">${endPt[0].toFixed(5)}, ${endPt[1].toFixed(5)}</div>
                                 </div>
                             </div>
-                            <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${endPt[0]},${endPt[1]}', '_blank')" class="bg-rose-600 hover:bg-rose-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-95 relative z-10 shrink-0"><i class="ph-bold ph-navigation-arrow text-lg"></i></button>
+                            <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${endPt[0]},${endPt[1]}', '_blank')" class="bg-rose-600 hover:bg-rose-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-95 relative z-10 shrink-0 cursor-pointer"><i class="ph-bold ph-navigation-arrow text-lg"></i></button>
                         </div>
                     </div>`;
                 highlightRoute(tId, itemId);
@@ -926,7 +914,6 @@
             }
         }
 
-        // --- 登入與啟動 ---
         function checkPassword() {
             const inputVal = document.getElementById('pwd-input').value;
             if (inputVal === SYSTEM_PASSWORD) {
