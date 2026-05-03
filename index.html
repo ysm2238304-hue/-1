@@ -3,82 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="清潔考核">
     <meta name="theme-color" content="#020617">
     
-    <!-- 內嵌 PWA Manifest -->
     <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22%E5%8D%97%E6%8A%95%E7%B8%A3%E6%B8%85%E6%BD%94%E8%80%83%E6%A0%B8%E7%B3%BB%E7%B5%B1%22%2C%22short_name%22%3A%22%E6%B8%85%E6%BD%94%E8%80%83%E6%A0%B8%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020617%22%2C%22theme_color%22%3A%22%23020617%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fapi.iconify.design%2Fph%2Fmap-pin-line-fill.svg%3Fcolor%3D%252322d3ee%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
 
     <title>南投縣清潔考核地圖系統</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Leaflet Map CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
 
-        /* 🌟 核心佈局與防卡死設定 */
         html, body { 
-            width: 100vw;
-            height: 100dvh; 
+            width: 100vw; height: 100dvh; 
             font-family: 'Noto Sans TC', sans-serif; 
-            background-color: #020617; 
-            color: #f8fafc; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
+            background-color: #020617; color: #f8fafc; 
+            margin: 0; padding: 0; overflow: hidden; 
             overscroll-behavior: none; 
         }
 
-        .glass { 
-            background: rgba(15, 23, 42, 0.75); 
-            backdrop-filter: blur(12px); 
-            -webkit-backdrop-filter: blur(12px); 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-        }
-        
-        .glass-panel { 
-            background: rgba(30, 41, 59, 0.95); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px); 
-            border-top: 1px solid rgba(255, 255, 255, 0.15); 
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7); 
-        }
+        .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-panel { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7); }
 
-        /* 歡迎頁與登入頁動畫過渡效果 */
-        #splash-screen { transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out; }
-        #login-screen { transition: opacity 0.5s ease-in-out; }
-        
+        #splash-screen, #login-screen { transition: opacity 0.5s ease-in-out; }
         .pulse-ring { animation: pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1); }
-        @keyframes pulse { 
-            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); } 
-            70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); } 
-            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } 
-        }
+        @keyframes pulse { 0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); } 100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } }
 
-        /* 地圖控制元件樣式覆寫 */
         .leaflet-control-attribution { display: none !important; }
         .leaflet-control-zoom { border: none !important; margin-top: 230px !important; }
         .leaflet-bar a { background-color: rgba(30, 41, 59, 0.8) !important; color: #06b6d4 !important; border-color: rgba(255,255,255,0.1) !important;}
 
-        /* 面板滑動過渡動畫 */
         .bottom-sheet { transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .bottom-sheet.hidden-sheet { transform: translateY(100%); }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 自訂彈窗與標記樣式 */
         .glass-tooltip { background: rgba(15, 23, 42, 0.85) !important; backdrop-filter: blur(4px) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; color: #f8fafc !important; border-radius: 8px !important; padding: 5px 10px !important; font-size: 12px !important; font-weight: 500 !important; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important; white-space: nowrap !important; }
         .hide-tooltips .glass-tooltip { opacity: 0 !important; visibility: hidden !important; transition: opacity 0.3s ease; }
         
@@ -86,10 +52,7 @@
         .user-pulse { position: absolute; top: -8px; left: -8px; width: 32px; height: 32px; background-color: rgba(59, 130, 246, 0.6); border-radius: 50%; animation: user-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
         @keyframes user-ping { 75%, 100% { transform: scale(2); opacity: 0; } }
 
-        /* 針對 iOS 狀態列安全區域設計的頂部 Padding */
         .safe-top-padding { padding-top: max(1rem, env(safe-area-inset-top)); }
-        
-        /* 🌟 路線高亮與變暗的電影級過渡動畫 */
         path.leaflet-interactive { transition: stroke-opacity 0.6s ease, stroke-width 0.6s ease, stroke 0.6s ease; }
     </style>
 </head>
@@ -116,7 +79,7 @@
             <p class="text-slate-400 text-sm mb-6">請輸入授權碼以存取資料</p>
             <input type="password" id="pwd-input" placeholder="請輸入密碼" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white text-center tracking-widest focus:outline-none focus:border-cyan-400 mb-2 transition-colors">
             <p id="pwd-error" class="text-red-400 text-xs mb-4 h-4 opacity-0 transition-opacity">密碼錯誤，請重新輸入</p>
-            <button onclick="checkPassword()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all active:scale-95 tracking-widest cursor-pointer">
+            <button id="btn-login" onclick="checkPassword()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all active:scale-95 tracking-widest cursor-pointer flex justify-center items-center gap-2">
                 進入系統
             </button>
         </div>
@@ -189,14 +152,12 @@
             </div>
         </div>
 
-        <!-- 5. 底部資訊與多照片面板 (限制最高高度為 50vh，保留上方看地圖的空間) -->
+        <!-- 5. 底部資訊與多照片面板 -->
         <div id="bottom-sheet" class="pointer-events-auto absolute bottom-0 left-0 bottom-sheet hidden-sheet glass-panel w-full rounded-t-3xl p-5 pb-8 shadow-[0_-20px_50px_rgba(0,0,0,0.8)] max-h-[55vh] overflow-y-auto flex flex-col z-[60]" style="touch-action: pan-y;">
             
-            <!-- 頂部控制與關閉按鈕 -->
             <div class="flex justify-between items-center mb-4">
-                <div class="w-8 h-1.5"></div> <!-- 佔位符保持置中 -->
+                <div class="w-8 h-1.5"></div>
                 <div class="w-12 h-1.5 bg-slate-600 rounded-full cursor-pointer" onclick="hideBottomSheet()"></div>
-                <!-- 🌟 明確的關閉按鈕 -->
                 <button class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800/80 text-slate-400 hover:text-white cursor-pointer" onclick="hideBottomSheet()">
                     <i class="ph-bold ph-x text-lg"></i>
                 </button>
@@ -205,38 +166,30 @@
             <div id="sheet-content" class="flex-1">
                 <div class="flex justify-between items-start mb-2">
                     <h3 class="text-xl font-bold text-white pr-2" id="sheet-title">點位名稱</h3>
-                    <!-- 狀態追蹤按鈕 (打卡) -->
                     <button id="mark-btn" class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all border cursor-pointer" onclick="toggleItemStatus()">
                         <i class="ph-fill ph-check-circle text-lg"></i> <span id="mark-text">未考核</span>
                     </button>
                 </div>
                 
-                <!-- 詳細資訊區塊 (路線雙卡片會產生在這裡) -->
                 <div class="text-sm text-slate-400 mb-5 w-full" id="sheet-desc">詳細資訊</div>
                 
-                <!-- 現場照片上傳區 -->
+                <!-- 照片上傳區 -->
                 <div class="mb-5 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
                     <div class="flex justify-between items-center mb-3">
                         <h4 class="text-sm font-bold text-slate-300 flex items-center gap-2">
                             <i class="ph-fill ph-camera text-cyan-400"></i> 照片上傳區
                         </h4>
-                        <!-- 支援手機相簿多圖上傳與相機拍攝 -->
                         <label class="bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold py-1.5 px-3 rounded-lg flex items-center gap-1 cursor-pointer transition-colors shadow-lg">
                             <i class="ph ph-upload-simple text-base"></i> 上傳/拍攝
                             <input type="file" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload(event)">
                         </label>
                     </div>
-                    
-                    <!-- 多照片預覽網格 -->
                     <div id="photo-preview-grid" class="grid grid-cols-3 gap-2 mb-3 empty:hidden"></div>
-
-                    <!-- 雲端上傳按鈕 -->
                     <button id="btn-upload-drive" onclick="uploadPhotosToDrive()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-sm font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors mt-2 cursor-pointer shadow-lg">
                         <i class="ph-fill ph-cloud-arrow-up text-lg text-fuchsia-400"></i> 一鍵同步至 Google Drive
                     </button>
                 </div>
 
-                <!-- 單一點位導航按鈕 -->
                 <button id="nav-btn" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 hidden cursor-pointer">
                     <i class="ph-fill ph-navigation-arrow text-xl"></i>
                     <span>開啟 Google Maps 導航</span>
@@ -254,15 +207,11 @@
          JavaScript 詳細設定與核心邏輯 
          ========================================== -->
     <script>
-        // 🚨 GAS 接收端網址 🚨
+        // 🚨 您的專屬 GAS 網址 (支援狀態同步與照片上傳)
         const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkClBmpcbfVL62Fyt0cDv3vzSF8ygo6_pMQtm6x2cCSiUGi3qaRLJ9i6ZKo-rcn9r2/exec"; 
-        
-        // 🚨 系統密碼 🚨
         const SYSTEM_PASSWORD = "54004658";
 
-        // ★ 引擎升級：KML 陣列 path 支援 ★
-        // 陣列內只要有超過 2 個座標點，系統就會智慧判斷為真實路線並畫出「實體粗線」。
-        // 如果只有 2 個點，則會畫出「直線虛線」。未來請將 KML 的經緯度座標貼入對應的 path 陣列中。
+        // --- 完整 13 鄉鎮市資料庫 (精準展開) ---
         const mapData = {
             "caotun": { 
                 name: "草屯鎮", office: { name: "草屯鎮公所", lat: 23.973684, lng: 120.680282, type: "office" }, restaurant: { name: "考核聚餐餐廳 (草屯)", lat: 23.975684, lng: 120.682282, type: "restaurant" }, 
@@ -376,6 +325,24 @@
         let currentTownshipId = null;
         let currentItemId = null; 
 
+        // 🌟 新增：向 Google 雲端讀取團隊最新進度
+        async function fetchSyncState() {
+            try {
+                const res = await fetch(GOOGLE_APP_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'get_status' })
+                });
+                const result = await res.json();
+                if (result.status === 'success' && result.data) {
+                    inspectionState = result.data;
+                    localStorage.setItem('nantou_inspection', JSON.stringify(inspectionState));
+                }
+            } catch(e) {
+                console.error("雲端狀態同步失敗，使用本機狀態", e);
+            }
+        }
+
+        // 儲存狀態並發送至雲端
         function saveState() {
             localStorage.setItem('nantou_inspection', JSON.stringify(inspectionState));
             try { 
@@ -411,8 +378,7 @@
                             </div>
                         </foreignObject>
                        </svg>`, 
-                iconSize: [40, 40], 
-                iconAnchor: [20, 20] 
+                iconSize: [40, 40], iconAnchor: [20, 20] 
             });
         }
 
@@ -432,7 +398,7 @@
                 attribution: '&copy; OpenStreetMap', subdomains: 'abcd', maxZoom: 20 
             }).addTo(map);
             
-            // 🌟 點擊地圖空白處，自動關閉面板並恢復全地圖視野
+            // 點擊地圖空白處，自動關閉面板並恢復全地圖視野
             map.on('click', function() {
                 const bs = document.getElementById('bottom-sheet');
                 if(bs && !bs.classList.contains('hidden-sheet')) {
@@ -443,11 +409,8 @@
             map.on('zoomend', function() { 
                 const mapEl = document.getElementById('map');
                 if (mapEl) {
-                    if(map.getZoom() < 14) {
-                        mapEl.classList.add('hide-tooltips');
-                    } else {
-                        mapEl.classList.remove('hide-tooltips');
-                    }
+                    if(map.getZoom() < 14) mapEl.classList.add('hide-tooltips');
+                    else mapEl.classList.remove('hide-tooltips');
                 }
             });
         }
@@ -478,7 +441,6 @@
                 });
                 routePolylines[itemId].bringToFront(); 
                 
-                // 完美避開頂部選單與底部卡片的平滑對焦
                 map.flyToBounds(routePolylines[itemId].getBounds(), {
                     paddingTopLeft: [30, 200], 
                     paddingBottomRight: [30, window.innerHeight * 0.45], 
@@ -487,6 +449,20 @@
                     duration: 1.2
                 });
             }
+        }
+
+        function resetRouteHighlights() {
+            Object.keys(routePolylines).forEach(k => {
+                const originalColor = routePolylines[k].options.originalColor;
+                const isDashed = routePolylines[k].options.isDashed;
+                const isDone = inspectionState[k];
+                routePolylines[k].setStyle({ 
+                    weight: isDashed ? 5 : 8, 
+                    color: isDone ? '#475569' : originalColor, 
+                    opacity: isDone ? 0.6 : 0.9 
+                });
+            });
+            if (currentBounds) map.flyToBounds(currentBounds, { padding: [50, 50], animate: true, duration: 1.2 });
         }
 
         function loadTownship(id, keepHighlight = false) {
@@ -508,9 +484,7 @@
             activeLayers = [];
             routePolylines = {};
             
-            if (!keepHighlight) {
-                hideBottomSheet(); 
-            }
+            if (!keepHighlight) hideBottomSheet(); 
 
             updateProgressBar();
             const bounds = [];
@@ -521,11 +495,7 @@
                 
                 marker.on('click', (e) => {
                     L.DomEvent.stopPropagation(e);
-                    Object.keys(routePolylines).forEach(k => {
-                        const originalColor = routePolylines[k].options.originalColor;
-                        const isDashed = routePolylines[k].options.isDashed;
-                        routePolylines[k].setStyle({ weight: isDashed ? 5 : 8, color: inspectionState[k] ? '#475569' : originalColor, opacity: inspectionState[k] ? 0.6 : 0.9 });
-                    });
+                    resetRouteHighlights();
                     map.flyTo([poi.lat, poi.lng], 16, { animate: true, duration: 1.2 });
                     showBottomSheet(poi.name, `類型：${poi.type === 'office' ? '鄉鎮公所' : '聚餐餐廳'}`, poi.lat, poi.lng, itemId);
                 });
@@ -542,7 +512,6 @@
             drawPOI(data.office, `${id}_office`); 
             drawPOI(data.restaurant, `${id}_restaurant`);
 
-            // 🌟 智慧判斷引擎：畫出虛線或真實 KML 實體路線
             data.routes.forEach(route => {
                 const itemId = `${id}_route_${route.id}`;
                 const isDone = inspectionState[itemId];
@@ -552,18 +521,13 @@
                 const startPt = route.path[0];
                 const endPt = route.path[route.path.length - 1];
                 
-                // 智慧判斷：如果只有2點就是虛線，超過2點就判定為KML真實實線
                 const isDashed = route.path.length === 2;
 
                 const polyline = L.polyline(route.path, { 
-                    color: routeColor, 
-                    weight: isDashed ? 5 : 8, // 實線更粗
-                    opacity: opacity, 
-                    dashArray: isDashed ? '10, 10' : null, // 完美還原虛線視覺
-                    lineCap: 'round', 
-                    lineJoin: 'round',
-                    originalColor: route.color,
-                    isDashed: isDashed
+                    color: routeColor, weight: isDashed ? 5 : 8, opacity: opacity, 
+                    dashArray: isDashed ? '10, 10' : null, 
+                    lineCap: 'round', lineJoin: 'round',
+                    originalColor: route.color, isDashed: isDashed
                 }).addTo(map);
                 
                 routePolylines[itemId] = polyline; 
@@ -644,23 +608,35 @@
             document.getElementById('progress-bar').style.width = `${pct}%`;
         }
 
-        function toggleItemStatus() {
+        // 🌟 狀態同步：打卡時不僅本機記錄，還會背景發送到雲端
+        async function toggleItemStatus() {
             if(!currentItemId) return;
-            inspectionState[currentItemId] = !inspectionState[currentItemId];
+            const newState = !inspectionState[currentItemId];
+            inspectionState[currentItemId] = newState;
+            
+            // 立即更新 UI，保持順暢感
             saveState(); 
             
-            const isDone = inspectionState[currentItemId];
             const btn = document.getElementById('mark-btn');
-            if (isDone) {
+            if (newState) {
                 btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-500/20 border-emerald-500 text-emerald-400 cursor-pointer";
                 document.getElementById('mark-text').innerText = "已考核";
             } else {
                 btn.className = "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all bg-slate-800 border-slate-600 text-slate-300 cursor-pointer";
                 document.getElementById('mark-text').innerText = "未考核";
             }
+
+            // 在背景將最新狀態同步至 Google 雲端
+            try {
+                fetch(GOOGLE_APP_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'set_status', itemId: currentItemId, isDone: newState })
+                });
+            } catch(e) {
+                console.error("狀態同步失敗", e);
+            }
         }
 
-        // --- 📷 照片上傳與預覽 ---
         function handlePhotoUpload(event) {
             const files = event.target.files;
             if(!files.length || !currentItemId) return;
@@ -760,7 +736,14 @@
                 try {
                     const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
                         method: 'POST',
-                        body: JSON.stringify({ township: townshipName, pointName: pointName, filename: fileName, mimeType: "image/jpeg", base64: base64Data })
+                        body: JSON.stringify({ 
+                            action: 'upload_photo', // 告訴後端這是上傳照片的指令
+                            township: townshipName, 
+                            pointName: pointName, 
+                            filename: fileName, 
+                            mimeType: "image/jpeg", 
+                            base64: base64Data 
+                        })
                     });
                     const result = await response.json();
                     if (result.status === "success") { photos[i].uploaded = true; successCount++; }
@@ -810,25 +793,13 @@
             if (bs) bs.classList.remove('hidden-sheet');
         }
 
-        // 🌟 隱藏面板並恢復所有高亮
         function hideBottomSheet() { 
             const bs = document.getElementById('bottom-sheet');
             if(!bs || bs.classList.contains('hidden-sheet')) return;
             
             bs.classList.add('hidden-sheet'); 
             currentItemId = null; 
-            
-            Object.keys(routePolylines).forEach(k => {
-                const originalColor = routePolylines[k].options.originalColor;
-                const isDashed = routePolylines[k].options.isDashed;
-                routePolylines[k].setStyle({ 
-                    weight: isDashed ? 5 : 8, 
-                    color: inspectionState[k] ? '#475569' : originalColor, 
-                    opacity: inspectionState[k] ? 0.6 : 0.9 
-                });
-            });
-
-            if (currentBounds) map.flyToBounds(currentBounds, { padding: [50, 50], animate: true, duration: 1.2 });
+            resetRouteHighlights();
         }
 
         function hidePwaPrompt() {
@@ -932,7 +903,8 @@
                 highlightRoute(tId, itemId);
                 showBottomSheet(title, descHTML, 0, 0, itemId, true);
             } else {
-                map.flyTo([lat, lng], 16, { animate: true, duration: 1 });
+                resetRouteHighlights();
+                map.flyTo([lat, lng], 16, { animate: true, duration: 1.2 });
                 setTimeout(() => {
                     showBottomSheet(title, `類型：${itemId.includes('office') ? '鄉鎮公所' : '聚餐餐廳'}`, lat, lng, itemId);
                 }, 1000);
@@ -984,10 +956,24 @@
             }
         }
 
-        function checkPassword() {
+        // 🌟 登入與啟動 (包含視角歸零、收起鍵盤與雲端讀取)
+        async function checkPassword() {
             const inputVal = document.getElementById('pwd-input').value;
             if (inputVal === SYSTEM_PASSWORD) {
+                // 1. 強制收起虛擬鍵盤，並將頁面滾動回最頂部 (解決 iPhone 跑版問題)
+                document.getElementById('pwd-input').blur();
+                window.scrollTo(0, 0);
+
                 document.getElementById('pwd-error').style.opacity = '0';
+                
+                // 按鈕改為載入中狀態
+                const loginBtn = document.getElementById('btn-login');
+                loginBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> 同步雲端進度...';
+                
+                // 2. 向雲端讀取最新團隊進度
+                await fetchSyncState();
+
+                // 3. 切換畫面
                 const loginScreen = document.getElementById('login-screen');
                 loginScreen.style.opacity = '0';
                 
@@ -1007,6 +993,9 @@
                     loginScreen.style.display = 'none'; 
                     if(map) map.invalidateSize(); 
                     if (currentBounds && map) map.fitBounds(currentBounds);
+                    
+                    // 根據雲端進度重繪地圖標記
+                    loadTownship(currentTownshipId);
                 }, 500);
             } else {
                 document.getElementById('pwd-error').style.opacity = '1';
@@ -1029,6 +1018,7 @@
                 });
             }
             
+            // 預設先載入草屯的地圖 UI (狀態會等登入後覆蓋)
             loadTownship(Object.keys(mapData)[0]);
 
             const pwdInput = document.getElementById('pwd-input');
