@@ -9,10 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="清潔考核">
     <meta name="theme-color" content="#020617">
     
-    <!-- 針對 Apple iOS (iPhone) 的圖示設定 -->
     <link rel="apple-touch-icon" href="app-icon.png">
-
-    <!-- 針對 Android 的圖示與 APP 設定 -->
     <link rel="manifest" href="manifest.json">
 
     <title>南投縣清潔考核地圖系統</title>
@@ -41,7 +38,6 @@
         @keyframes pulse { 0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); } 100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } }
 
         .leaflet-control-attribution { display: none !important; }
-        /* 為了容納雙層按鈕，將縮放控制項位置往下調 */
         .leaflet-control-zoom { border: none !important; margin-top: 275px !important; }
         .leaflet-bar a { background-color: rgba(30, 41, 59, 0.8) !important; color: #06b6d4 !important; border-color: rgba(255,255,255,0.1) !important;}
 
@@ -92,23 +88,13 @@
         </div>
     </div>
 
-    <!-- PWA 安裝提示 -->
-    <div id="pwa-prompt" class="fixed top-4 left-4 right-4 z-[9997] bg-blue-600 text-white p-4 rounded-xl shadow-2xl flex items-start gap-3 hidden transition-transform translate-y-[-150%]">
-        <i class="ph-fill ph-info text-2xl"></i>
-        <div class="flex-1">
-            <h4 class="font-bold mb-1">將系統加入主畫面</h4>
-            <p class="text-sm opacity-90 leading-tight">點擊瀏覽器下方的「分享」按鈕，選擇「加入主畫面」，即可像 App 一樣全螢幕使用！</p>
-        </div>
-        <button onclick="hidePwaPrompt()" class="text-white opacity-70 hover:opacity-100 cursor-pointer"><i class="ph ph-x text-lg"></i></button>
-    </div>
-
     <!-- 2. 主畫面 (地圖容器) -->
     <div id="map" class="absolute inset-0 z-0"></div>
 
     <!-- 3. UI 覆蓋層 -->
     <div id="ui-layer" class="absolute inset-0 z-10 pointer-events-none">
         
-        <!-- 頂部選單 (包含雙軌雙層列) -->
+        <!-- 頂部選單 -->
         <div class="pointer-events-auto absolute top-0 left-0 w-full safe-top-padding px-4 pb-3 bg-gradient-to-b from-slate-950 via-slate-950/95 to-transparent z-[50]">
             <div class="flex items-center justify-between mb-3 mt-2">
                 <h2 class="text-lg font-bold flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
@@ -132,17 +118,13 @@
                 <div id="search-results" class="absolute top-full left-0 right-0 mt-1 bg-slate-800 rounded-xl shadow-2xl z-[60] hidden max-h-48 overflow-y-auto border border-slate-700"></div>
             </div>
             
-            <!-- 🌟 第一層：13鄉鎮市橫向浮動按鈕 (單區微觀模式) -->
-            <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 mb-1 w-full touch-pan-x" style="-webkit-overflow-scrolling: touch;" id="township-selector">
-                <!-- JavaScript 動態生成小膠囊按鈕 -->
-            </div>
+            <!-- 第一層：13鄉鎮市橫向浮動按鈕 -->
+            <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 mb-1 w-full touch-pan-x" style="-webkit-overflow-scrolling: touch;" id="township-selector"></div>
 
-            <!-- 🌟 第二層：6大路線日期卡片 (跨區任務宏觀模式) -->
-            <div class="flex gap-3 overflow-x-auto no-scrollbar py-2 mb-2 w-full touch-pan-x" style="-webkit-overflow-scrolling: touch;" id="schedule-selector">
-                <!-- JavaScript 動態生成大型卡片 -->
-            </div>
+            <!-- 第二層：6大路線日期卡片 -->
+            <div class="flex gap-3 overflow-x-auto no-scrollbar py-2 mb-2 w-full touch-pan-x" style="-webkit-overflow-scrolling: touch;" id="schedule-selector"></div>
 
-            <!-- 全局與單區 戰情進度儀表板 -->
+            <!-- 戰情進度儀表板 -->
             <div class="w-full px-1">
                 <div class="flex justify-between text-[11px] text-slate-400 font-bold mb-1">
                     <span id="progress-text">🏆 總體達成率：0/0 點位</span>
@@ -154,19 +136,18 @@
             </div>
         </div>
 
-        <!-- 4. 清單模式 (List View) -->
+        <!-- 4. 清單模式 (動態時間軸 List View) -->
         <div id="list-view" class="pointer-events-auto absolute inset-0 z-[45] bg-slate-950 overflow-y-auto hidden pt-[280px] pb-10 px-4" style="touch-action: pan-y;">
             <h3 id="list-main-title" class="text-lg font-bold text-cyan-400 mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
                 <i class="ph-fill ph-list-bullets"></i> 任務清單
             </h3>
             <div id="list-container" class="flex flex-col gap-4">
-                <!-- JavaScript 動態階層式生成清單 -->
+                <!-- 動態生成清單或時間軸 -->
             </div>
         </div>
 
-        <!-- 5. 底部資訊與多照片面板 -->
+        <!-- 5. 底部資訊與面板 -->
         <div id="bottom-sheet" class="pointer-events-auto absolute bottom-0 left-0 bottom-sheet hidden-sheet glass-panel w-full rounded-t-3xl p-5 pb-8 shadow-[0_-20px_50px_rgba(0,0,0,0.8)] max-h-[55vh] overflow-y-auto flex flex-col z-[60]" style="touch-action: pan-y;">
-            
             <div class="flex justify-between items-center mb-4">
                 <div class="w-8 h-1.5"></div>
                 <div class="w-12 h-1.5 bg-slate-600 rounded-full cursor-pointer" onclick="hideBottomSheet()"></div>
@@ -209,32 +190,146 @@
             </div>
         </div>
 
-        <!-- 6. 實時定位按鈕 -->
-        <button id="locate-btn" class="pointer-events-auto absolute bottom-8 right-4 z-[40] glass p-3 rounded-full text-cyan-400 hover:text-white shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all active:scale-95 cursor-pointer" onclick="locateUser()">
-            <i class="ph-fill ph-crosshair text-2xl"></i>
-        </button>
+        <!-- 6. 地圖懸浮功能區 (智慧導航 & 定位) -->
+        <div class="pointer-events-none absolute bottom-8 left-4 right-4 z-[40] flex items-end justify-between gap-3">
+            
+            <!-- 🌟 新增：下一站智慧導航按鈕 -->
+            <div id="smart-nav-container" class="pointer-events-auto flex-1 hidden">
+                <button id="smart-nav-btn" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 px-5 rounded-full shadow-[0_10px_30px_rgba(16,185,129,0.4)] border border-emerald-400 flex items-center justify-between transition-all active:scale-95 cursor-pointer">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                            <i class="ph-fill ph-navigation-arrow text-lg animate-pulse"></i>
+                        </div>
+                        <div class="text-left leading-tight truncate">
+                            <div class="text-[10px] text-emerald-200 uppercase tracking-widest font-black">NEXT STOP</div>
+                            <div class="text-sm font-bold truncate" id="smart-nav-text">下一站</div>
+                        </div>
+                    </div>
+                    <i class="ph-bold ph-caret-right text-emerald-200 text-xl shrink-0"></i>
+                </button>
+            </div>
+
+            <div class="flex-1" id="smart-nav-spacer"></div> <!-- Spacer if nav is hidden -->
+
+            <!-- 實時定位按鈕 -->
+            <button id="locate-btn" class="pointer-events-auto shrink-0 glass w-14 h-14 rounded-full flex items-center justify-center text-cyan-400 hover:text-white shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all active:scale-95 cursor-pointer" onclick="locateUser()">
+                <i class="ph-fill ph-crosshair text-2xl"></i>
+            </button>
+        </div>
+
     </div>
 
-    <!-- ==========================================
-         JavaScript 詳細設定與核心邏輯 
-         ========================================== -->
     <script>
         // 🚨 GAS 雲端資料庫網址
         const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkClBmpcbfVL62Fyt0cDv3vzSF8ygo6_pMQtm6x2cCSiUGi3qaRLJ9i6ZKo-rcn9r2/exec"; 
         const SYSTEM_PASSWORD = "54004658";
 
-        // 🌟 任務檔期架構
+        // 🌟 升級版任務檔期架構 (包含精確時間軸)
         const scheduleData = [
-            { id: 'day1', date: '5/15 (五)', routeName: '路線一任務', townships: ['zhushan', 'lugu'] },
-            { id: 'day2', date: '5/18 (一)', routeName: '路線二任務', townships: ['nantou', 'caotun', 'guoxing'] },
-            { id: 'day3', date: '5/19 (二)', routeName: '路線三任務', townships: ['yuchi', 'puli', 'renai'] },
-            { id: 'day4', date: '5/20 (三)', routeName: '路線四任務', townships: ['zhongliao'] },
-            { id: 'day5', date: '5/21 (四)', routeName: '路線五任務', townships: ['mingjian', 'jiji', 'shuili'] },
-            { id: 'day6', date: '5/22 (五)', routeName: '路線六任務', townships: ['xinyi'] }
+            { 
+                id: 'day1', date: '5/15 (五)', routeName: '路線 1：鹿谷、竹山', townships: ['lugu', 'zhushan'],
+                timeline: [
+                    { time: '09:00', label: '南投縣政府 (集合出發)', type: 'start' },
+                    { time: '09:40 - 09:55', tId: 'lugu', itemId: 'lugu_route_3', label: '永隆村' },
+                    { time: '10:05 - 10:25', tId: 'lugu', itemId: 'lugu_office', label: '鹿谷鄉公所' },
+                    { time: '10:35 - 10:50', tId: 'lugu', itemId: 'lugu_route_1', label: '竹林村' },
+                    { time: '10:55 - 11:10', tId: 'lugu', itemId: 'lugu_route_2', label: '竹豐村' },
+                    { time: '11:45 - 13:30', tId: 'zhushan', itemId: 'zhushan_restaurant', label: '[午餐] 小巷町麵屋' },
+                    { time: '13:40 - 13:55', tId: 'zhushan', itemId: 'zhushan_route_1', label: '竹山里' },
+                    { time: '14:00 - 14:15', tId: 'zhushan', itemId: 'zhushan_route_2', label: '中正里' },
+                    { time: '14:20 - 14:35', tId: 'zhushan', itemId: 'zhushan_route_3', label: '中山里' },
+                    { time: '14:40 - 15:00', tId: 'zhushan', itemId: 'zhushan_office', label: '竹山鎮公所' },
+                    { time: '15:00', label: '考核結束、賦歸', type: 'end' }
+                ]
+            },
+            { 
+                id: 'day2', date: '5/18 (一)', routeName: '路線 2：南投、草屯、國姓', townships: ['nantou', 'caotun', 'guoxing'],
+                timeline: [
+                    { time: '08:30', label: '南投縣政府 (集合出發)', type: 'start' },
+                    { time: '08:40 - 08:55', tId: 'nantou', itemId: 'nantou_route_3', label: '嘉興社區' },
+                    { time: '09:05 - 09:25', tId: 'nantou', itemId: 'nantou_office', label: '南投市公所' },
+                    { time: '09:30 - 09:45', tId: 'nantou', itemId: 'nantou_route_2', label: '慈慧善行社區' },
+                    { time: '09:50 - 10:05', tId: 'nantou', itemId: 'nantou_route_1', label: '內轆社區' },
+                    { time: '10:25 - 10:45', tId: 'caotun', itemId: 'caotun_office', label: '草屯鎮公所' },
+                    { time: '10:55 - 13:30', tId: 'caotun', itemId: 'caotun_restaurant', label: '[午餐] 春水岸料理茶房' },
+                    { time: '13:40 - 13:55', tId: 'caotun', itemId: 'caotun_route_1', label: '中山里' },
+                    { time: '14:00 - 14:15', tId: 'caotun', itemId: 'caotun_route_2', label: '玉峰里' },
+                    { time: '14:25 - 14:40', tId: 'caotun', itemId: 'caotun_route_3', label: '新豐里' },
+                    { time: '15:15 - 15:30', tId: 'guoxing', itemId: 'guoxing_route_3', label: '國姓村' },
+                    { time: '15:35 - 15:55', tId: 'guoxing', itemId: 'guoxing_office', label: '國姓鄉公所' },
+                    { time: '16:05 - 16:20', tId: 'guoxing', itemId: 'guoxing_route_2', label: '石門村' },
+                    { time: '16:35 - 16:50', tId: 'guoxing', itemId: 'guoxing_route_1', label: '北港村' },
+                    { time: '16:50', label: '考核結束、賦歸', type: 'end' }
+                ]
+            },
+            { 
+                id: 'day3', date: '5/19 (二)', routeName: '路線 3：魚池、埔里、仁愛', townships: ['yuchi', 'puli', 'guoxing', 'renai'],
+                timeline: [
+                    { time: '08:30', label: '南投縣政府 (集合出發)', type: 'start' },
+                    { time: '09:20 - 09:35', tId: 'yuchi', itemId: 'yuchi_route_3', label: '澀水社區' },
+                    { time: '09:45 - 10:00', tId: 'yuchi', itemId: 'yuchi_route_2', label: '養靈社區' },
+                    { time: '10:10 - 10:30', tId: 'yuchi', itemId: 'yuchi_office', label: '魚池鄉公所' },
+                    { time: '10:35 - 10:50', tId: 'yuchi', itemId: 'yuchi_route_1', label: '東池村' },
+                    { time: '11:10 - 11:25', tId: 'puli', itemId: 'puli_route_2', label: '珠格里' },
+                    { time: '11:35 - 11:50', tId: 'puli', itemId: 'puli_route_3', label: '溪南里' },
+                    { time: '12:00 - 13:30', tId: 'puli', itemId: 'puli_restaurant', label: '[午餐] 初煦咖哩' },
+                    { time: '13:35 - 13:50', tId: 'puli', itemId: 'puli_route_1', label: '同聲里' },
+                    { time: '13:55 - 14:15', tId: 'puli', itemId: 'puli_office', label: '埔里鎮公所' },
+                    { time: '14:45 - 15:00', tId: 'guoxing', itemId: 'guoxing_route_3', label: '國姓村' },
+                    { time: '16:00 - 16:20', tId: 'renai', itemId: 'renai_office', label: '仁愛鄉公所' },
+                    { time: '16:35 - 16:50', tId: 'renai', itemId: 'renai_route_3', label: '壽亭新村' },
+                    { time: '16:55 - 17:10', tId: 'renai', itemId: 'renai_route_1', label: '幼獅道班' },
+                    { time: '17:20 - 17:35', tId: 'renai', itemId: 'renai_route_2', label: '博望新村' },
+                    { time: '17:35', label: '考核結束、賦歸', type: 'end' }
+                ]
+            },
+            { 
+                id: 'day4', date: '5/20 (三)', routeName: '路線 4：中寮鄉', townships: ['zhongliao', 'caotun'],
+                timeline: [
+                    { time: '09:00', label: '南投縣政府 (集合出發)', type: 'start' },
+                    { time: '09:20 - 09:40', tId: 'zhongliao', itemId: 'zhongliao_office', label: '中寮鄉公所' },
+                    { time: '09:50 - 10:05', tId: 'zhongliao', itemId: 'zhongliao_route_1', label: '永芳村' },
+                    { time: '10:15 - 10:30', tId: 'zhongliao', itemId: 'zhongliao_route_3', label: '龍岩村' },
+                    { time: '10:50 - 11:05', tId: 'zhongliao', itemId: 'zhongliao_route_2', label: '清水村' },
+                    { time: '11:45 - 13:30', tId: 'zhongliao', itemId: 'zhongliao_restaurant', label: '[午餐] 八貫饗手創料理' },
+                    { time: '13:50 - 14:10', tId: 'caotun', itemId: 'caotun_office', label: '草屯鎮公所' },
+                    { time: '14:10', label: '考核結束、賦歸', type: 'end' }
+                ]
+            },
+            { 
+                id: 'day5', date: '5/21 (四)', routeName: '路線 5：名間、集集、水里', townships: ['mingjian', 'jiji', 'shuili'],
+                timeline: [
+                    { time: '08:30', label: '南投縣政府 (集合出發)', type: 'start' },
+                    { time: '08:45 - 09:00', tId: 'mingjian', itemId: 'mingjian_route_1', label: '萬丹社區' },
+                    { time: '09:10 - 09:25', tId: 'mingjian', itemId: 'mingjian_route_2', label: '東仁社區' },
+                    { time: '09:30 - 09:45', tId: 'mingjian', itemId: 'mingjian_route_3', label: '仁和社區' },
+                    { time: '09:55 - 10:15', tId: 'mingjian', itemId: 'mingjian_office', label: '名間鄉公所' },
+                    { time: '10:30 - 10:45', tId: 'jiji', itemId: 'jiji_route_1', label: '田寮里' },
+                    { time: '10:55 - 11:10', tId: 'jiji', itemId: 'jiji_route_2', label: '集集社區' },
+                    { time: '11:15 - 11:35', tId: 'jiji', itemId: 'jiji_office', label: '集集鎮公所' },
+                    { time: '11:40 - 13:30', tId: 'jiji', itemId: 'jiji_restaurant', label: '[午餐] 和風山寨庭園餐廳' },
+                    { time: '13:45 - 14:00', tId: 'shuili', itemId: 'shuili_route_1', label: '北埔村' },
+                    { time: '14:05 - 14:25', tId: 'shuili', itemId: 'shuili_office', label: '水里鄉公所' },
+                    { time: '14:30 - 14:45', tId: 'shuili', itemId: 'shuili_route_3', label: '農富村' },
+                    { time: '14:55 - 15:10', tId: 'shuili', itemId: 'shuili_route_2', label: '車埕村' },
+                    { time: '15:10', label: '考核結束、賦歸', type: 'end' }
+                ]
+            },
+            { 
+                id: 'day6', date: '5/22 (五)', routeName: '路線 6：信義鄉', townships: ['xinyi'],
+                timeline: [
+                    { time: '09:00', label: '南投縣政府 (集合出發)', type: 'start' },
+                    { time: '10:00 - 10:15', tId: 'xinyi', itemId: 'xinyi_route_1', label: '人和村' },
+                    { time: '10:30 - 10:45', tId: 'xinyi', itemId: 'xinyi_route_3', label: '雙龍村' },
+                    { time: '11:10 - 11:25', tId: 'xinyi', itemId: 'xinyi_route_2', label: '潭南村' },
+                    { time: '12:20 - 13:30', tId: 'xinyi', itemId: 'xinyi_restaurant', label: '[午餐] 九井日式料理' },
+                    { time: '13:35 - 13:55', tId: 'xinyi', itemId: 'xinyi_office', label: '信義鄉公所' },
+                    { time: '13:55', label: '考核結束、賦歸', type: 'end' }
+                ]
+            }
         ];
 
         // --- 完整 KML 座標解析與 13 鄉鎮市資料庫 ---
-        // (依據需求：動態配置各鄉鎮的 restaurant，若為 null 則系統會自動隱藏該點位並校正進度條分母)
         const mapData = {
             "caotun": { name: "草屯鎮", office: { name: "草屯鎮公所", lat: 23.973701202271474, lng: 120.68022654598622, type: "office" }, restaurant: { name: "春水岸料理茶房/草屯店 (已預約)", lat: 23.969205732996517, lng: 120.68520909536889, type: "restaurant" }, routes: [{ id: 1, name: "中山里", path: [[23.973648, 120.681481], [23.973460, 120.682347], [23.974195, 120.682406], [23.972881, 120.682341]], color: "#06b6d4" }, { id: 2, name: "玉峰里", path: [[23.982066, 120.688199], [23.981820, 120.688376], [23.982414, 120.689186], [23.982874, 120.688768], [23.982624, 120.687776], [23.982291, 120.688017]], color: "#d946ef" }, { id: 3, name: "新豐里", path: [[23.995212, 120.681790], [23.994669, 120.684203], [23.994160, 120.686595]], color: "#84cc16" }] },
             "shuili": { name: "水里鄉", office: { name: "水里鄉公所", lat: 23.81141267056375, lng: 120.85608475512156, type: "office" }, restaurant: null, routes: [{ id: 1, name: "北埔村", path: [[23.810731, 120.852545], [23.810547, 120.852615], [23.810360, 120.852660], [23.810149, 120.852722], [23.810027, 120.852754], [23.809943, 120.852786], [23.809288, 120.852988], [23.809430, 120.853312], [23.809547, 120.853289], [23.809693, 120.853261], [23.809855, 120.853224], [23.810135, 120.853166], [23.810402, 120.853083], [23.810575, 120.853008], [23.810813, 120.852911]], color: "#06b6d4" }, { id: 2, name: "車埕村", path: [[23.831373, 120.866492], [23.832033, 120.866253], [23.832426, 120.866323], [23.832640, 120.866410], [23.832840, 120.866551], [23.833198, 120.866883], [23.833566, 120.867248], [23.833795, 120.867491], [23.833836, 120.867531], [23.833879, 120.867565]], color: "#d946ef" }, { id: 3, name: "農富村", path: [[23.821010, 120.856727], [23.820845, 120.856670], [23.820737, 120.856646], [23.820585, 120.856630], [23.820212, 120.856512], [23.819923, 120.856389], [23.819697, 120.856239], [23.819236, 120.855836]], color: "#84cc16" }] },
@@ -243,65 +338,61 @@
             "xinyi": { name: "信義鄉", office: { name: "信義鄉公所", lat: 23.696810932792182, lng: 120.85455629466571, type: "office" }, restaurant: { name: "九井日式料理 (已預約)", lat: 23.702575531838416, lng: 120.8532670513056, type: "restaurant" }, routes: [{ id: 1, name: "人和村", path: [[23.778942, 120.896535], [23.779134, 120.896106], [23.779323, 120.895867], [23.779657, 120.895760], [23.780030, 120.895642], [23.780383, 120.895578], [23.780766, 120.895545], [23.781178, 120.895588], [23.781569, 120.895599], [23.781948, 120.895513]], color: "#06b6d4" }, { id: 2, name: "潭南村", path: [[23.821405, 120.939646], [23.821261, 120.939679], [23.821188, 120.939603], [23.820027, 120.938606], [23.819747, 120.939056], [23.819831, 120.939158], [23.820081, 120.939330], [23.820219, 120.939437], [23.820169, 120.939593], [23.820071, 120.939721], [23.820263, 120.939813], [23.820420, 120.940027], [23.820552, 120.940199], [23.820793, 120.940333], [23.821096, 120.940643]], color: "#d946ef" }, { id: 3, name: "雙龍村", path: [[23.784948, 120.947299], [23.784954, 120.947670], [23.785080, 120.948063], [23.785348, 120.948600], [23.785495, 120.949072], [23.785515, 120.949555], [23.785348, 120.949898], [23.785161, 120.950123]], color: "#84cc16" }] },
             "nantou": { name: "南投市", office: { name: "南投市公所", lat: 23.91151328625724, lng: 120.68707485194145, type: "office" }, restaurant: null, routes: [{ id: 1, name: "內轆社區", path: [[23.928796, 120.691903], [23.930523, 120.691768], [23.931002, 120.691779], [23.931400, 120.691817], [23.931512, 120.691742]], color: "#06b6d4" }, { id: 2, name: "慈慧善行", path: [[23.915154, 120.692452], [23.914149, 120.693359], [23.913382, 120.693058]], color: "#d946ef" }, { id: 3, name: "嘉興社區", path: [[23.889016, 120.691666], [23.889456, 120.691097], [23.889770, 120.690733], [23.890055, 120.690293], [23.890369, 120.689842], [23.890228, 120.689696], [23.890060, 120.689550]], color: "#84cc16" }] },
             "puli": { name: "埔里鎮", office: { name: "埔里鎮公所", lat: 23.966539050288937, lng: 120.96918103852619, type: "office" }, restaurant: { name: "初煦咖哩 truedish curry (已預約)", lat: 23.97063453264716, lng: 120.95562910323592, type: "restaurant" }, routes: [{ id: 1, name: "同聲里", path: [[23.959005, 120.965108], [23.958760, 120.965849], [23.958274, 120.967308], [23.957434, 120.968512]], color: "#06b6d4" }, { id: 2, name: "珠格里", path: [[23.946470, 120.956893], [23.942440, 120.958218]], color: "#d946ef" }, { id: 3, name: "溪南里", path: [[23.952208, 120.956484], [23.951663, 120.956629], [23.951104, 120.956541], [23.950595, 120.956340], [23.950157, 120.956006], [23.949971, 120.955902], [23.949891, 120.955916], [23.949825, 120.955962], [23.949737, 120.956113], [23.949531, 120.956291], [23.949242, 120.956388], [23.948679, 120.956555]], color: "#84cc16" }] },
-            "guoxing": { name: "國姓鄉", office: { name: "國姓鄉公所", lat: 24.040023198804203, lng: 120.8575184499724, type: "office" }, restaurant: null, routes: [{ id: 1, name: "北港村", path: [[24.056492, 120.886570], [24.057619, 120.886956], [24.058902, 120.887396], [24.059950, 120.887815], [24.060577, 120.888276], [24.061018, 120.888555], [24.061234, 120.888866], [24.061724, 120.889252], [24.061782, 120.888770]], color: "#06b6d4" }, { id: 2, name: "石門村", path: [[24.042776, 120.858522], [24.043016, 120.858694], [24.043266, 120.858876], [24.043472, 120.859102], [24.043580, 120.859477], [24.043555, 120.859676], [24.043418, 120.859960], [24.043408, 120.860357], [24.043428, 120.860759], [24.043192, 120.861027], [24.042957, 120.861328], [24.042845, 120.861703]], color: "#d946ef" }, { id: 3, name: "國姓社區", path: [[24.037839, 120.854539], [24.037479, 120.854804], [24.037077, 120.855137], [24.036724, 120.855362], [24.036313, 120.855169], [24.035989, 120.855019], [24.035637, 120.854955], [24.035225, 120.854955], [24.034755, 120.854965], [24.034539, 120.855014]], color: "#84cc16" }] },
+            "guoxing": { name: "國姓鄉", office: { name: "國姓鄉公所", lat: 24.040023198804203, lng: 120.8575184499724, type: "office" }, restaurant: null, routes: [{ id: 1, name: "北港村", path: [[24.056492, 120.886570], [24.057619, 120.886956], [24.058902, 120.887396], [24.059950, 120.887815], [24.060577, 120.888276], [24.061018, 120.888555], [24.061234, 120.888866], [24.061724, 120.889252], [24.061782, 120.888770]], color: "#06b6d4" }, { id: 2, name: "石門村", path: [[24.042776, 120.858522], [24.043016, 120.858694], [24.043266, 120.858876], [24.043472, 120.859102], [24.043580, 120.859477], [24.043555, 120.859676], [24.043418, 120.859960], [24.043408, 120.860357], [24.043428, 120.860759], [24.043192, 120.861027], [24.042957, 120.861328], [24.042845, 120.861703]], color: "#d946ef" }, { id: 3, name: "國姓村", path: [[24.037839, 120.854539], [24.037479, 120.854804], [24.037077, 120.855137], [24.036724, 120.855362], [24.036313, 120.855169], [24.035989, 120.855019], [24.035637, 120.854955], [24.035225, 120.854955], [24.034755, 120.854965], [24.034539, 120.855014]], color: "#84cc16" }] },
             "yuchi": { name: "魚池鄉", office: { name: "魚池鄉公所", lat: 23.895784743579522, lng: 120.9356848374742, type: "office" }, restaurant: null, routes: [{ id: 1, name: "東池村", path: [[23.895298, 120.944443], [23.895259, 120.944867], [23.895137, 120.946363]], color: "#06b6d4" }, { id: 2, name: "養靈社區", path: [[23.903436, 120.916756], [23.903578, 120.916468], [23.903691, 120.916136], [23.903651, 120.915919], [23.903541, 120.915758], [23.903453, 120.915699], [23.903205, 120.916101], [23.903102, 120.916413], [23.903205, 120.916614], [23.903411, 120.916957]], color: "#d946ef" }, { id: 3, name: "澀水社區", path: [[23.921966, 120.916879], [23.922118, 120.916777], [23.922256, 120.916796], [23.92378, 120.916863], [23.922810, 120.917104], [23.922824, 120.917201], [23.922780, 120.917523], [23.922839, 120.917807], [23.922869, 120.918016], [23.922805, 120.918322], [23.922766, 120.918536], [23.922746, 120.918622]], color: "#84cc16" }] },
             "lugu": { name: "鹿谷鄉", office: { name: "鹿谷鄉公所", lat: 23.74584379054923, lng: 120.75344378887058, type: "office" }, restaurant: null, routes: [{ id: 1, name: "竹林村", path: [[23.725828, 120.758027], [23.725695, 120.758210], [23.725519, 120.758419], [23.725362, 120.758548], [23.725190, 120.758617], [23.724905, 120.758751], [23.724669, 120.758918], [23.724409, 120.759100], [23.724134, 120.759229], [23.723795, 120.759395], [23.723451, 120.759556], [23.723240, 120.759647]], color: "#06b6d4" }, { id: 2, name: "竹豐村", path: [[23.733175, 120.747998], [23.732622, 120.748991], [23.732478, 120.749197], [23.732296, 120.749428], [23.732122, 120.749635], [23.731913, 120.749865]], color: "#d946ef" }, { id: 3, name: "永隆村", path: [[23.753360, 120.774664], [23.753161, 120.774761], [23.753357, 120.775145], [23.753549, 120.775295], [23.754049, 120.774404]], color: "#84cc16" }] },
-            "jiji": { name: "集集鎮", office: { name: "集集鎮公所", lat: 23.828428477004184, lng: 120.78649872937791, type: "office" }, restaurant: { name: "和風山寨庭園餐廳 (已預約)", lat: 23.826608159284344, lng: 120.77647997503004, type: "restaurant" }, routes: [{ id: 1, name: "田寮里", path: [[23.836133, 120.750475], [23.835927, 120.750454], [23.835505, 120.750346], [23.835205, 120.750223], [23.835092, 120.750529], [23.834935, 120.751006], [23.834857, 120.751092], [23.834744, 120.751055], [23.834499, 120.750915]], color: "#06b6d4" }, { id: 2, name: "集集社區", path: [[23.830511, 120.783897], [23.830530, 120.784128], [23.829834, 120.784165], [23.829731, 120.783039]], color: "#d946ef" }, { id: 3, name: "吳厝里", path: [[23.826726, 120.788951], [23.828169, 120.788919], [23.828151, 120.787846]], color: "#84cc16" }] },
+            "jiji": { name: "集集鎮", office: { name: "集集鎮公所", lat: 23.828428477004184, lng: 120.78649872937791, type: "office" }, restaurant: { name: "和風山寨庭園餐廳 (已預約)", lat: 23.826608159284344, lng: 120.77647997503004, type: "restaurant" }, routes: [{ id: 1, name: "田寮里", path: [[23.836133, 120.750475], [23.835927, 120.750454], [23.835505, 120.750346], [23.835205, 120.750223], [23.835092, 120.750529], [23.834935, 120.751006], [23.834857, 120.751092], [23.834744, 120.751055], [23.834499, 120.750915]], color: "#06b6d4" }, { id: 2, name: "集集社區", path: [[23.830511, 120.783897], [23.830530, 120.784128], [23.829834, 120.784165], [23.829731, 120.783039]], color: "#d946ef" }] },
             "zhongliao": { name: "中寮鄉", office: { name: "中寮鄉公所", lat: 23.879004201328062, lng: 120.7660984194605, type: "office" }, restaurant: { name: "八貫饗手創料理 公所店 (已預約)", lat: 23.911205470242624, lng: 120.68444407678275, type: "restaurant" }, routes: [{ id: 1, name: "永芳村", path: [[23.930912, 120.743591], [23.931236, 120.747045]], color: "#06b6d4" }, { id: 2, name: "清水村", path: [[23.945342, 120.788963], [23.945084, 120.789358], [23.945025, 120.789545], [23.944981, 120.789679], [23.944908, 120.789781], [23.944766, 120.789958], [23.944658, 120.790130], [23.944594, 120.790286], [23.944520, 120.790629], [23.944266, 120.790307]], color: "#d946ef" }, { id: 3, name: "龍岩村", path: [[23.935209, 120.758523], [23.935591, 120.757820], [23.935027, 120.757326], [23.934831, 120.757241], [23.934699, 120.757257], [23.934542, 120.757337], [23.933375, 120.758169]], color: "#84cc16" }] },
             "renai": { name: "仁愛鄉", office: { name: "仁愛鄉公所", lat: 24.02154782822989, lng: 121.132062016071, type: "office" }, restaurant: null, routes: [{ id: 1, name: "幼獅道班", path: [[24.047794, 121.156327], [24.047738, 121.156339], [24.047594, 121.156146], [24.047389, 121.156134], [24.047223, 121.156014], [24.047111, 121.156036], [24.046650, 121.155947]], color: "#06b6d4" }, { id: 2, name: "博望新村", path: [[24.075000, 121.170200], [24.074983, 121.170458], [24.074940, 121.170770], [24.074861, 121.171296], [24.075015, 121.171333], [24.075158, 121.171441]], color: "#d946ef" }, { id: 3, name: "壽亭新村", path: [[24.041599, 121.160730], [24.041771, 121.160853], [24.041925, 121.160996], [24.042082, 121.161127], [24.042050, 121.161178], [24.041971, 121.162264], [24.041910, 121.161275], [24.041844, 121.161213], [24.041489, 121.160856]], color: "#84cc16" }] }
         };
 
-        // --- 狀態保存 ---
+        // --- 狀態與照片 ---
         let inspectionState = JSON.parse(localStorage.getItem('nantou_inspection')) || {};
         let inspectionPhotos = JSON.parse(localStorage.getItem('nantou_photos_v2')) || {}; 
         
-        // 🌟 雙軌狀態追蹤
         let currentMode = 'schedule'; 
         let currentScheduleId = null; 
         let currentTownshipId = null;
         let currentItemId = null; 
 
-        // 向 Google 雲端讀取進度
+        // 🌟 幫助函數：取得點位的經緯度
+        function getItemInfo(tId, itemId) {
+            const d = mapData[tId];
+            if (!d) return null;
+            if (itemId.endsWith('_office') && d.office) return { lat: d.office.lat, lng: d.office.lng };
+            if (itemId.endsWith('_restaurant') && d.restaurant) return { lat: d.restaurant.lat, lng: d.restaurant.lng };
+            if (itemId.includes('_route_')) {
+                const rId = parseInt(itemId.split('_route_')[1]);
+                const r = d.routes.find(x => x.id === rId);
+                if(r) return { lat: r.path[0][0], lng: r.path[0][1] };
+            }
+            return null;
+        }
+
         async function fetchSyncState() {
             try {
                 const res = await fetch(GOOGLE_APP_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: 'get_status' })
                 });
-
                 if (!res.ok) throw new Error("HTTP 狀態碼異常：" + res.status);
-
                 const responseText = await res.text();
-                let result;
-                try {
-                    result = JSON.parse(responseText);
-                } catch(parseError) {
-                    console.error("雲端回傳的不是 JSON 格式:", responseText);
-                    return false;
-                }
-
+                let result = JSON.parse(responseText);
                 if (result.status === 'success' && result.data) {
                     inspectionState = result.data;
                     localStorage.setItem('nantou_inspection', JSON.stringify(inspectionState));
                     return true;
-                } else {
-                    return false;
-                }
-            } catch(e) {
-                return false;
-            }
+                } else return false;
+            } catch(e) { return false; }
         }
 
         function saveState() {
             localStorage.setItem('nantou_inspection', JSON.stringify(inspectionState));
-            try { localStorage.setItem('nantou_photos_v2', JSON.stringify(inspectionPhotos)); } catch(e) { alert("手機暫存空間已滿！請先清除已上傳的照片。"); }
+            try { localStorage.setItem('nantou_photos_v2', JSON.stringify(inspectionPhotos)); } catch(e) { alert("手機暫存空間已滿！"); }
             updateProgressBar();
-            if(!isListView) {
-                updateMarkersStatus();
-            } else {
-                renderListView(); 
-            }
+            updateSmartNav(); // 更新智慧導航狀態
+            if(!isListView) updateMarkersStatus();
+            else renderListView(); 
         }
 
         // --- 地圖核心 ---
@@ -319,9 +410,7 @@
                         <circle cx="20" cy="20" r="18" fill="rgba(15, 23, 42, 0.8)" stroke="${iconColor}" stroke-width="2"/>
                         ${opacity === 1 ? `<circle cx="20" cy="20" r="24" fill="none" stroke="${iconColor}" stroke-width="1" opacity="0.4" class="pulse"/>` : ''}
                         <foreignObject x="8" y="8" width="24" height="24">
-                            <div xmlns="http://www.w3.org/1999/xhtml" style="display:flex; justify-content:center; align-items:center; height:100%; color:${iconColor}; font-size:18px;">
-                                <i class="${iconName}"></i>
-                            </div>
+                            <div xmlns="http://www.w3.org/1999/xhtml" style="display:flex; justify-content:center; align-items:center; height:100%; color:${iconColor}; font-size:18px;"><i class="${iconName}"></i></div>
                         </foreignObject>
                        </svg>`, 
                 iconSize: [40, 40], iconAnchor: [20, 20] 
@@ -359,11 +448,8 @@
         }
 
         function updateMarkersStatus() {
-            if (currentMode === 'schedule' && currentScheduleId) {
-                loadSchedule(currentScheduleId, true);
-            } else if (currentMode === 'township' && currentTownshipId) {
-                loadTownship(currentTownshipId, true);
-            }
+            if (currentMode === 'schedule' && currentScheduleId) loadSchedule(currentScheduleId, true);
+            else if (currentMode === 'township' && currentTownshipId) loadTownship(currentTownshipId, true);
         }
 
         function highlightRoute(itemId) {
@@ -395,7 +481,6 @@
             if (currentBounds) map.flyToBounds(currentBounds, { padding: [50, 50], animate: true, duration: 1.2 });
         }
 
-        // 🌟 繪圖共用引擎 (給單區或多區使用)
         function drawMapForTownships(townshipsArray) {
             const bounds = [];
             townshipsArray.forEach(tId => {
@@ -418,7 +503,6 @@
                     activeLayers.push(marker); bounds.push([poi.lat, poi.lng]);
                 };
 
-                // 支援空值渲染(null判定)
                 if (data.office) drawPOI(data.office, `${tId}_office`); 
                 if (data.restaurant) drawPOI(data.restaurant, `${tId}_restaurant`);
 
@@ -426,7 +510,6 @@
                     const itemId = `${tId}_route_${route.id}`;
                     const isDone = inspectionState[itemId];
                     const routeColor = isDone ? '#475569' : route.color;
-                    
                     const startPt = route.path[0];
                     const endPt = route.path[route.path.length - 1];
 
@@ -472,7 +555,6 @@
             return bounds;
         }
 
-        // 🌟 模式 A：載入【跨區任務】視角
         function loadSchedule(scheduleId, keepHighlight = false) {
             currentMode = 'schedule';
             currentScheduleId = scheduleId;
@@ -486,9 +568,8 @@
             if(headerIcon) headerIcon.className = "ph-fill ph-calendar-check text-cyan-400";
             
             const listTitle = document.getElementById('list-main-title');
-            if(listTitle) listTitle.innerHTML = `<i class="ph-fill ph-calendar-check"></i> ${schedule.date} ${schedule.routeName} 清單`;
+            if(listTitle) listTitle.innerHTML = `<i class="ph-fill ph-calendar-check"></i> ${schedule.date} ${schedule.routeName}`;
             
-            // 🌟 任務卡片亮起 (使用安全的 innerHTML 替換，防當機)
             document.querySelectorAll('.schedule-btn').forEach(btn => {
                 const sId = btn.dataset.id;
                 const s = scheduleData.find(x => x.id === sId);
@@ -502,7 +583,6 @@
                 }
             });
 
-            // 🌟 鄉鎮按鈕全暗 (互斥效果)
             document.querySelectorAll('.township-pill').forEach(btn => {
                 btn.className = 'township-pill shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow border bg-slate-800/60 border-slate-700 text-slate-400 cursor-pointer hover:bg-slate-700';
             });
@@ -512,6 +592,7 @@
 
             const bounds = drawMapForTownships(schedule.townships);
             updateProgressBar();
+            updateSmartNav(); // 🌟 載入路線時檢查下一站
 
             if (!keepHighlight && bounds.length > 0) {
                 currentBounds = L.latLngBounds(bounds);
@@ -521,7 +602,6 @@
             }
         }
 
-        // 🌟 模式 B：載入【單一鄉鎮】微觀視角
         function loadTownship(tId, keepHighlight = false) {
             currentMode = 'township';
             currentTownshipId = tId;
@@ -537,7 +617,6 @@
             const listTitle = document.getElementById('list-main-title');
             if(listTitle) listTitle.innerHTML = `<i class="ph-fill ph-map-pin"></i> ${data.name} 任務清單`;
 
-            // 🌟 鄉鎮按鈕亮起
             document.querySelectorAll('.township-pill').forEach(btn => {
                 if(btn.dataset.id === tId) {
                     btn.className = 'township-pill shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-lg bg-rose-600/90 border border-rose-400 text-white cursor-pointer shadow-[0_0_10px_rgba(244,63,94,0.4)]';
@@ -546,7 +625,6 @@
                 }
             });
 
-            // 🌟 任務卡片全暗 (互斥效果防當機)
             document.querySelectorAll('.schedule-btn').forEach(btn => {
                 const sId = btn.dataset.id;
                 const s = scheduleData.find(x => x.id === sId);
@@ -560,6 +638,7 @@
 
             const bounds = drawMapForTownships([tId]);
             updateProgressBar();
+            updateSmartNav(); // 🌟 隱藏下一站導航 (因為進入微觀模式)
 
             if (!keepHighlight && bounds.length > 0) {
                 currentBounds = L.latLngBounds(bounds);
@@ -569,34 +648,25 @@
             }
         }
 
-        // 🌟 雙軌進度儀表板 (已升級支援動態扣除 null 餐廳的數量)
+        // 🌟 升級版雙軌進度儀表板 (支援 Timeline 精確計算)
         function updateProgressBar() {
             let total = 0; let comp = 0; let titleText = "";
-            let targetTownships = [];
 
             if (currentMode === 'schedule' && currentScheduleId) {
                 const schedule = scheduleData.find(s => s.id === currentScheduleId);
-                targetTownships = schedule.townships;
-                titleText = `🏆 ${schedule.date.split(' ')[0]} 總體達成率：`;
-            } else if (currentMode === 'township' && currentTownshipId) {
-                targetTownships = [currentTownshipId];
-                titleText = `📍 ${mapData[currentTownshipId].name} 進度：`;
-            } else { return; }
-
-            targetTownships.forEach(tId => {
-                const data = mapData[tId];
-                if(data) {
-                    let tTotal = 0;
-                    if (data.office) tTotal += 1;
-                    if (data.restaurant) tTotal += 1;
-                    tTotal += data.routes.length;
-                    total += tTotal;
-
-                    if(data.office && inspectionState[`${tId}_office`]) comp++;
-                    if(data.restaurant && inspectionState[`${tId}_restaurant`]) comp++;
-                    data.routes.forEach(r => { if(inspectionState[`${tId}_route_${r.id}`]) comp++; });
+                titleText = `🏆 ${schedule.date.split(' ')[0]} 達成率：`;
+                if(schedule.timeline) {
+                    const actionableItems = schedule.timeline.filter(i => i.itemId);
+                    total = actionableItems.length;
+                    comp = actionableItems.filter(i => inspectionState[i.itemId]).length;
                 }
-            });
+            } else if (currentMode === 'township' && currentTownshipId) {
+                const data = mapData[currentTownshipId];
+                titleText = `📍 ${data.name} 達成率：`;
+                if (data.office) { total++; if(inspectionState[`${currentTownshipId}_office`]) comp++; }
+                if (data.restaurant) { total++; if(inspectionState[`${currentTownshipId}_restaurant`]) comp++; }
+                data.routes.forEach(r => { total++; if(inspectionState[`${currentTownshipId}_route_${r.id}`]) comp++; });
+            } else { return; }
             
             const pct = total === 0 ? 0 : Math.round((comp / total) * 100);
             
@@ -608,6 +678,43 @@
             
             const progressBar = document.getElementById('progress-bar');
             if(progressBar) progressBar.style.width = `${pct}%`;
+        }
+
+        // 🌟 核心功能：下一站智慧導航
+        function updateSmartNav() {
+            const navContainer = document.getElementById('smart-nav-container');
+            const navSpacer = document.getElementById('smart-nav-spacer');
+            if (!navContainer || !navSpacer) return;
+            
+            // 只有在「路線模式」下才啟用導航
+            if (currentMode !== 'schedule' || !currentScheduleId) {
+                navContainer.classList.add('hidden');
+                navSpacer.classList.remove('hidden');
+                return;
+            }
+            
+            const schedule = scheduleData.find(s => s.id === currentScheduleId);
+            if (!schedule || !schedule.timeline) return;
+            
+            // 尋找 timeline 中第一個還沒被標記完成的任務點位
+            const nextItem = schedule.timeline.find(item => item.itemId && !inspectionState[item.itemId]);
+            
+            if (nextItem) {
+                document.getElementById('smart-nav-text').innerText = nextItem.label;
+                const info = getItemInfo(nextItem.tId, nextItem.itemId);
+                
+                const btn = document.getElementById('smart-nav-btn');
+                if (btn) {
+                    btn.onclick = () => {
+                        if (info) jumpToMap(nextItem.tId, nextItem.itemId, info.lat, info.lng, nextItem.label);
+                    };
+                }
+                navSpacer.classList.add('hidden');
+                navContainer.classList.remove('hidden');
+            } else {
+                navContainer.classList.add('hidden');
+                navSpacer.classList.remove('hidden');
+            }
         }
 
         async function toggleItemStatus() {
@@ -628,7 +735,7 @@
                 if (!response.ok) throw new Error("HTTP 狀態碼異常：" + response.status);
                 const responseText = await response.text();
                 let result;
-                try { result = JSON.parse(responseText); } catch(e) { throw new Error("雲端回傳非預期格式，可能被 Google 權限阻擋。"); }
+                try { result = JSON.parse(responseText); } catch(e) { throw new Error("雲端回傳非預期格式"); }
 
                 if (result.status === 'success') {
                     inspectionState[currentItemId] = newState;
@@ -776,10 +883,9 @@
                     navBtn.classList.add('hidden'); 
                 } else { 
                     navBtn.classList.remove('hidden'); 
-                    // 🌟 導航參數優化：過濾掉 "(已預約)" 字樣，確保 Google Maps 搜尋完全精準
                     const tId = itemId.split('_')[0];
                     const townshipName = mapData[tId] ? mapData[tId].name : '';
-                    const cleanTitle = title.replace(' (已預約)', '').trim();
+                    const cleanTitle = title.replace(' (已預約)', '').replace('[午餐]', '').trim();
                     const destinationQuery = encodeURIComponent(`${townshipName} ${cleanTitle}`);
                     navBtn.onclick = () => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${destinationQuery}`, '_blank'); }; 
                 }
@@ -815,22 +921,71 @@
             }
         }
 
-        // 🌟 雙軌清單模式 (支援空值)
+        // 🌟 升級版清單模式 (動態時間軸 / 區域列表 雙軌渲染)
         function renderListView(filterText = "") {
             const container = document.getElementById('list-container');
             if(!container) return;
             container.innerHTML = '';
             
+            // 模式 A：如果是路線排程模式且無過濾字串，直接渲染出精美的垂直時間軸
+            if (currentMode === 'schedule' && currentScheduleId && !filterText) {
+                const schedule = scheduleData.find(s => s.id === currentScheduleId);
+                if(!schedule || !schedule.timeline) return;
+                
+                let timelineHTML = `<div class="relative border-l-2 border-slate-700 ml-4 pl-6 py-2 flex flex-col gap-6">`;
+                
+                schedule.timeline.forEach((item) => {
+                    if (item.type === 'start' || item.type === 'end') {
+                        timelineHTML += `
+                            <div class="relative">
+                                <div class="absolute -left-[31px] top-1.5 w-4 h-4 bg-slate-600 rounded-full ring-4 ring-slate-950"></div>
+                                <div class="text-sm font-bold text-slate-500 mb-0.5">${item.time}</div>
+                                <div class="text-slate-400 font-bold">${item.label}</div>
+                            </div>
+                        `;
+                    } else {
+                        const isDone = inspectionState[item.itemId];
+                        const hasPhoto = (inspectionPhotos[item.itemId] && inspectionPhotos[item.itemId].length > 0);
+                        const isRestaurant = item.itemId.includes('restaurant');
+                        
+                        const dotColor = isDone ? 'bg-emerald-500' : (isRestaurant ? 'bg-amber-500' : 'bg-cyan-500');
+                        const borderColor = isDone ? 'border-emerald-500/50' : 'border-slate-700';
+                        
+                        const info = getItemInfo(item.tId, item.itemId);
+                        const lat = info ? info.lat : 0;
+                        const lng = info ? info.lng : 0;
+                        
+                        timelineHTML += `
+                            <div class="relative">
+                                <div class="absolute -left-[31px] top-4 w-4 h-4 ${dotColor} rounded-full ring-4 ring-slate-950 shadow-[0_0_10px_currentColor]"></div>
+                                <div class="text-sm font-bold text-cyan-400 mb-1.5">${item.time}</div>
+                                
+                                <div class="bg-slate-800/80 border ${borderColor} p-3 rounded-xl shadow-lg flex items-center justify-between cursor-pointer active:scale-95 transition-transform" onclick="jumpToMap('${item.tId}', '${item.itemId}', ${lat}, ${lng}, '${item.label}')">
+                                    <div class="flex-1 pr-2">
+                                        <div class="text-[11px] text-slate-400 mb-1 flex gap-2 flex-wrap">
+                                            <span class="bg-slate-900 px-2 py-0.5 rounded text-cyan-300 border border-slate-700">${mapData[item.tId].name}</span>
+                                            ${isDone ? '<span class="text-emerald-400 flex items-center gap-1"><i class="ph-fill ph-check-circle"></i> 已完勘</span>' : ''}
+                                            ${hasPhoto ? '<span class="text-amber-400 flex items-center gap-1"><i class="ph-fill ph-camera"></i> 照片</span>' : ''}
+                                        </div>
+                                        <h4 class="text-white font-bold text-base leading-tight">${item.label}</h4>
+                                    </div>
+                                    <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-cyan-400 shrink-0 shadow-inner"><i class="ph-bold ph-caret-right text-lg"></i></div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                timelineHTML += `</div>`;
+                container.innerHTML = timelineHTML;
+                return;
+            }
+
+            // 模式 B：如果是單一鄉鎮模式或有搜尋字串，退回原本的地點群組列表渲染
             let targetTownships = [];
             if (filterText) {
                 targetTownships = Object.keys(mapData);
-            } else {
-                if (currentMode === 'schedule' && currentScheduleId) {
-                    const schedule = scheduleData.find(s => s.id === currentScheduleId);
-                    if (schedule) targetTownships = schedule.townships;
-                } else if (currentMode === 'township' && currentTownshipId) {
-                    targetTownships = [currentTownshipId];
-                }
+            } else if (currentMode === 'township' && currentTownshipId) {
+                targetTownships = [currentTownshipId];
             }
 
             if (targetTownships.length === 0) return;
@@ -884,7 +1039,6 @@
             if(!hasAnyResult) container.innerHTML = '<p class="text-slate-500 text-center py-10">找不到符合的地點或路線</p>';
         }
 
-        // 🌟 智慧搜尋雙軌切換 (支援空值)
         function jumpToMap(tId, itemId, lat, lng, title) {
             if (isListView) toggleView();
             const searchResults = document.getElementById('search-results');
@@ -893,7 +1047,6 @@
             const searchInput = document.getElementById('search-input');
             if(searchInput) searchInput.value = '';
 
-            // 判斷跳轉邏輯
             if (currentMode === 'schedule') {
                 const schedule = scheduleData.find(s => s.id === currentScheduleId);
                 if (!schedule.townships.includes(tId)) loadTownship(tId, true);
@@ -966,7 +1119,6 @@
             }
         }
 
-        // 🌟 執行同步與進入主畫面 (供自動登入與手動登入共用)
         async function performSyncAndEnter() {
             const syncSuccess = await fetchSyncState();
             if (!syncSuccess) alert("⚠️ 讀取雲端資料庫失敗！\n\n由於連線遭到 Google 阻擋，我們將暫時載入您手機中的舊有紀錄。\n請務必重新確認您的 GAS 權限是否有對外開放。");
@@ -995,7 +1147,6 @@
             if(map) map.invalidateSize(); 
             if (currentBounds && map) map.fitBounds(currentBounds);
             
-            // 預設載入第一個檔期 (5/15 路線一)
             loadSchedule(scheduleData[0].id);
         }
 
@@ -1012,7 +1163,6 @@
                 const loginBtn = document.getElementById('btn-login');
                 if (loginBtn) loginBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> 同步雲端進度...';
                 
-                // 🌟 永久記住密碼
                 localStorage.setItem('nantou_system_auth', 'true');
                 
                 await performSyncAndEnter();
@@ -1024,7 +1174,6 @@
         window.onload = () => {
             initMap();
             
-            // 動態生成：第一層 (13鄉鎮膠囊按鈕)
             const townshipSelector = document.getElementById('township-selector');
             if (townshipSelector) {
                 Object.keys(mapData).forEach((id) => {
@@ -1037,7 +1186,6 @@
                 });
             }
 
-            // 動態生成：第二層 (6大任務卡片)
             const scheduleSelector = document.getElementById('schedule-selector');
             if (scheduleSelector) {
                 scheduleData.forEach((s) => {
@@ -1053,17 +1201,15 @@
             const pwdInput = document.getElementById('pwd-input');
             if(pwdInput) pwdInput.addEventListener('keypress', e => { if (e.key === 'Enter') checkPassword(); });
             
-            // 🌟 檢查是否已記住密碼 (自動登入邏輯)
             if (localStorage.getItem('nantou_system_auth') === 'true') {
                 const splashText = document.querySelector('#splash-screen .animate-pulse');
                 if(splashText) splashText.innerText = '自動登入中，同步雲端資料...';
                 
                 const loginScreen = document.getElementById('login-screen');
-                if (loginScreen) loginScreen.style.display = 'none'; // 直接隱藏登入頁
+                if (loginScreen) loginScreen.style.display = 'none'; 
                 
-                performSyncAndEnter(); // 直接同步並進入地圖
+                performSyncAndEnter(); 
             } else {
-                // 如果沒有登入過，2秒後隱藏歡迎動畫，顯示登入畫面
                 setTimeout(() => { const splash = document.getElementById('splash-screen'); if (splash) { splash.style.opacity = '0'; splash.style.visibility = 'hidden'; } }, 2000); 
             }
         };
