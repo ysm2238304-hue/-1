@@ -237,10 +237,34 @@
         const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkClBmpcbfVL62Fyt0cDv3vzSF8ygo6_pMQtm6x2cCSiUGi3qaRLJ9i6ZKo-rcn9r2/exec"; 
         const SYSTEM_PASSWORD = "54004658";
 
-        // 🌟 115年第二次無預警清潔考核 (更新後正式版本)
+        // 🌟 115年第二次無預警清潔考核 (V4 最終正式版)
         const scheduleData = [
             { 
-                id: 'day1', date: '7/15 (二)', routeName: '路線 1：水里、信義', townships: ['shuili', 'xinyi'],
+                id: 'day1', date: '7/15 (二)', routeName: '路線 1：中寮、南投、名間', townships: ['zhongliao', 'nantou', 'mingjian'],
+                timeline: [
+                    { time: '08:30', label: '南投縣政府 (集合出發)', type: 'start' },
+                    { time: '08:50 - 09:00', tId: 'nantou', itemId: 'nantou_service', label: '南投服務區' },
+                    { time: '09:15 - 09:25', tId: 'zhongliao', itemId: 'zhongliao_office', label: '中寮鄉公所' },
+                    { time: '09:40 - 09:50', tId: 'zhongliao', itemId: 'zhongliao_route_2', label: '清水村' },
+                    { time: '10:05 - 10:15', tId: 'zhongliao', itemId: 'zhongliao_route_3', label: '龍岩村' },
+                    { time: '10:25 - 10:35', tId: 'zhongliao', itemId: 'zhongliao_route_1', label: '永芳村' },
+                    { time: '10:45 - 10:55', tId: 'nantou', itemId: 'nantou_route_1', label: '內轆社區' },
+                    { time: '11:05 - 11:15', tId: 'nantou', itemId: 'nantou_route_2', label: '慈慧善行協會' },
+                    { time: '11:25 - 11:35', tId: 'nantou', itemId: 'nantou_office', label: '南投市公所' },
+                    { time: '12:00 - 13:30', label: '[午餐] 地點待確認', type: 'lunch' },
+                    { time: '13:30 - 13:40', tId: 'nantou', itemId: 'nantou_route_3', label: '嘉興社區' },
+                    { time: '13:50 - 14:00', tId: 'mingjian', itemId: 'mingjian_gas', label: '明昌加油站' },
+                    { time: '14:15 - 14:25', tId: 'mingjian', itemId: 'mingjian_visitor', label: '松柏嶺遊客中心' },
+                    { time: '14:30 - 14:40', tId: 'mingjian', itemId: 'mingjian_temple', label: '松柏嶺受天宮' },
+                    { time: '14:50 - 15:00', tId: 'mingjian', itemId: 'mingjian_office', label: '名間鄉公所' },
+                    { time: '15:10 - 15:20', tId: 'mingjian', itemId: 'mingjian_route_3', label: '仁和社區' },
+                    { time: '15:30 - 15:40', tId: 'mingjian', itemId: 'mingjian_route_2', label: '東仁社區' },
+                    { time: '15:50 - 16:00', tId: 'mingjian', itemId: 'mingjian_route_1', label: '萬丹社區' },
+                    { time: '16:30', label: '返回南投縣政府', type: 'end' }
+                ]
+            },
+            { 
+                id: 'day2', date: '7/16 (三)', routeName: '路線 2：水里、信義', townships: ['shuili', 'xinyi'],
                 timeline: [
                     { time: '08:30', label: '南投縣政府 (集合出發)', type: 'start' },
                     { time: '09:10 - 09:20', tId: 'shuili', itemId: 'shuili_route_3', label: '農富村' },
@@ -255,30 +279,6 @@
                     { time: '14:40 - 14:50', tId: 'xinyi', itemId: 'xinyi_meizi', label: '梅子夢工廠' },
                     { time: '15:05 - 15:15', tId: 'xinyi', itemId: 'xinyi_household', label: '信義戶政事務所' },
                     { time: '15:20 - 15:30', tId: 'xinyi', itemId: 'xinyi_office', label: '信義鄉公所' },
-                    { time: '16:30', label: '返回南投縣政府', type: 'end' }
-                ]
-            },
-            { 
-                id: 'day2', date: '7/16 (三)', routeName: '路線 2：名間、南投、中寮', townships: ['mingjian', 'nantou', 'zhongliao'],
-                timeline: [
-                    { time: '08:30', label: '南投縣政府 (集合出發)', type: 'start' },
-                    { time: '08:50 - 09:00', tId: 'mingjian', itemId: 'mingjian_route_1', label: '萬丹社區' },
-                    { time: '09:15 - 09:25', tId: 'mingjian', itemId: 'mingjian_route_2', label: '東仁社區' },
-                    { time: '09:35 - 09:45', tId: 'mingjian', itemId: 'mingjian_route_3', label: '仁和社區' },
-                    { time: '10:00 - 10:10', tId: 'mingjian', itemId: 'mingjian_temple', label: '松柏嶺受天宮' },
-                    { time: '10:15 - 10:25', tId: 'mingjian', itemId: 'mingjian_visitor', label: '松柏嶺遊客中心' },
-                    { time: '10:40 - 10:50', tId: 'mingjian', itemId: 'mingjian_office', label: '名間鄉公所' },
-                    { time: '11:00 - 11:10', tId: 'mingjian', itemId: 'mingjian_gas', label: '明昌加油站' },
-                    { time: '11:20 - 11:30', tId: 'nantou', itemId: 'nantou_route_3', label: '嘉興社區' },
-                    { time: '11:40 - 11:50', tId: 'nantou', itemId: 'nantou_office', label: '南投市公所' },
-                    { time: '12:00 - 13:30', label: '[午餐] 地點待確認', type: 'lunch' },
-                    { time: '13:30 - 13:40', tId: 'nantou', itemId: 'nantou_route_2', label: '慈慧善行社區' },
-                    { time: '13:50 - 14:00', tId: 'nantou', itemId: 'nantou_route_1', label: '內轆社區' },
-                    { time: '14:10 - 14:20', tId: 'nantou', itemId: 'nantou_service', label: '南投服務區' },
-                    { time: '14:40 - 14:50', tId: 'zhongliao', itemId: 'zhongliao_office', label: '中寮鄉公所' },
-                    { time: '15:00 - 15:10', tId: 'zhongliao', itemId: 'zhongliao_route_1', label: '永芳村' },
-                    { time: '15:20 - 15:30', tId: 'zhongliao', itemId: 'zhongliao_route_3', label: '龍岩村' },
-                    { time: '15:40 - 15:50', tId: 'zhongliao', itemId: 'zhongliao_route_2', label: '清水村' },
                     { time: '16:30', label: '返回南投縣政府', type: 'end' }
                 ]
             },
@@ -302,26 +302,24 @@
                 ]
             },
             { 
-                id: 'day4', date: '7/20 (日)', routeName: '路線 4：集集、魚池', townships: ['jiji', 'yuchi'],
+                id: 'day4', date: '7/20 (日)', routeName: '路線 4：埔里、仁愛', townships: ['puli', 'renai'],
                 timeline: [
                     { time: '08:30', label: '南投縣政府 (集合出發)', type: 'start' },
-                    { time: '08:50 - 09:00', tId: 'jiji', itemId: 'jiji_route_1', label: '田寮里' },
-                    { time: '09:10 - 09:20', tId: 'jiji', itemId: 'jiji_weir', label: '集集攔河堰' },
-                    { time: '09:30 - 09:40', tId: 'jiji', itemId: 'jiji_7_11', label: '7-11 集利門市' },
-                    { time: '09:50 - 10:00', tId: 'jiji', itemId: 'jiji_route_2', label: '集集社區' },
-                    { time: '10:10 - 10:20', tId: 'jiji', itemId: 'jiji_office', label: '集集鎮公所' },
-                    { time: '10:30 - 10:40', tId: 'jiji', itemId: 'jiji_route_3', label: '吳厝里' },
-                    { time: '10:50 - 11:00', tId: 'jiji', itemId: 'jiji_biodiversity', label: '農業部生物多樣性研究所' },
-                    { time: '11:20 - 11:30', tId: 'yuchi', itemId: 'yuchi_visitor1', label: '向山遊客中心' },
-                    { time: '11:40 - 11:50', tId: 'yuchi', itemId: 'yuchi_teacher', label: '日月潭教師會館' },
+                    { time: '09:05 - 09:15', tId: 'puli', itemId: 'puli_route_2', label: '珠格里' },
+                    { time: '09:20 - 09:30', tId: 'puli', itemId: 'puli_route_3', label: '溪南里' },
+                    { time: '09:35 - 09:45', tId: 'puli', itemId: 'puli_route_1', label: '同聲里' },
+                    { time: '09:50 - 10:00', tId: 'puli', itemId: 'puli_office', label: '埔里鎮公所' },
+                    { time: '10:05 - 10:15', tId: 'puli', itemId: 'puli_gas1', label: '台灣中油埔里站' },
+                    { time: '10:20 - 10:30', tId: 'puli', itemId: 'puli_gas2', label: '台灣中油埔里中山路站' },
+                    { time: '10:50 - 11:00', tId: 'puli', itemId: 'puli_7_11', label: '7-11 佳耘門市' },
+                    { time: '11:05 - 11:15', tId: 'renai', itemId: 'renai_wushe', label: '台灣中油霧社站' },
+                    { time: '11:20 - 11:30', tId: 'renai', itemId: 'renai_office', label: '仁愛鄉公所' },
                     { time: '12:00 - 13:30', label: '[午餐] 地點待確認', type: 'lunch' },
-                    { time: '13:30 - 13:40', tId: 'yuchi', itemId: 'yuchi_pier', label: '朝霧碼頭' },
-                    { time: '13:50 - 14:00', tId: 'yuchi', itemId: 'yuchi_visitor2', label: '伊達邵遊客中心' },
-                    { time: '14:10 - 14:20', tId: 'yuchi', itemId: 'yuchi_route_1', label: '東池村' },
-                    { time: '14:30 - 14:40', tId: 'yuchi', itemId: 'yuchi_office', label: '魚池鄉公所' },
-                    { time: '14:50 - 15:00', tId: 'yuchi', itemId: 'yuchi_route_2', label: '養靈社區' },
-                    { time: '15:10 - 15:20', tId: 'yuchi', itemId: 'yuchi_route_3', label: '澀水社區' },
-                    { time: '16:00', label: '返回南投縣政府', type: 'end' }
+                    { time: '13:30 - 13:40', tId: 'renai', itemId: 'renai_route_3', label: '壽亭新村' },
+                    { time: '13:55 - 14:05', tId: 'renai', itemId: 'renai_route_1', label: '幼獅道班' },
+                    { time: '14:10 - 14:20', tId: 'renai', itemId: 'renai_business', label: '清境農場南端商圈' },
+                    { time: '14:30 - 14:40', tId: 'renai', itemId: 'renai_route_2', label: '博望新村' },
+                    { time: '16:20', label: '返回南投縣政府', type: 'end' }
                 ]
             },
             { 
@@ -348,24 +346,26 @@
                 ]
             },
             { 
-                id: 'day6', date: '8/11 (二)', routeName: '路線 6：埔里、仁愛', townships: ['puli', 'renai'],
+                id: 'day6', date: '8/11 (二)', routeName: '路線 6：集集、魚池', townships: ['jiji', 'yuchi'],
                 timeline: [
                     { time: '08:30', label: '南投縣政府 (集合出發)', type: 'start' },
-                    { time: '09:40 - 09:50', tId: 'puli', itemId: 'puli_route_2', label: '珠格里' },
-                    { time: '10:00 - 10:10', tId: 'puli', itemId: 'puli_route_3', label: '溪南里' },
-                    { time: '10:20 - 10:30', tId: 'puli', itemId: 'puli_route_1', label: '同聲里' },
-                    { time: '10:40 - 10:50', tId: 'puli', itemId: 'puli_office', label: '埔里鎮公所' },
-                    { time: '11:00 - 11:10', tId: 'puli', itemId: 'puli_gas1', label: '台灣中油埔里站' },
-                    { time: '11:20 - 11:30', tId: 'puli', itemId: 'puli_gas2', label: '台灣中油埔里中山路站' },
-                    { time: '11:40 - 11:50', tId: 'puli', itemId: 'puli_7_11', label: '7-11 佳耘門市' },
+                    { time: '09:05 - 09:15', tId: 'jiji', itemId: 'jiji_route_1', label: '田寮里' },
+                    { time: '09:25 - 09:35', tId: 'jiji', itemId: 'jiji_weir', label: '集集攔河堰' },
+                    { time: '09:45 - 09:55', tId: 'jiji', itemId: 'jiji_7_11', label: '7-11 集利門市' },
+                    { time: '10:00 - 10:10', tId: 'jiji', itemId: 'jiji_route_2', label: '集集社區' },
+                    { time: '10:15 - 10:25', tId: 'jiji', itemId: 'jiji_office', label: '集集鎮公所' },
+                    { time: '10:35 - 10:45', tId: 'jiji', itemId: 'jiji_route_3', label: '吳厝里' },
+                    { time: '10:55 - 11:05', tId: 'jiji', itemId: 'jiji_biodiversity', label: '農業部生物多樣性研究所' },
+                    { time: '11:35 - 11:45', tId: 'yuchi', itemId: 'yuchi_visitor1', label: '向山遊客中心' },
                     { time: '12:00 - 13:30', label: '[午餐] 地點待確認', type: 'lunch' },
-                    { time: '13:40 - 13:50', tId: 'renai', itemId: 'renai_wushe', label: '台灣中油霧社站' },
-                    { time: '14:00 - 14:10', tId: 'renai', itemId: 'renai_office', label: '仁愛鄉公所' },
-                    { time: '14:20 - 14:30', tId: 'renai', itemId: 'renai_route_3', label: '壽亭新村' },
-                    { time: '14:40 - 14:50', tId: 'renai', itemId: 'renai_route_1', label: '幼獅道班' },
-                    { time: '15:00 - 15:10', tId: 'renai', itemId: 'renai_business', label: '清境農場南端商圈' },
-                    { time: '15:20 - 15:30', tId: 'renai', itemId: 'renai_route_2', label: '博望新村' },
-                    { time: '16:30', label: '返回南投縣政府', type: 'end' }
+                    { time: '13:30 - 13:40', tId: 'yuchi', itemId: 'yuchi_teacher', label: '日月潭教師會館' },
+                    { time: '13:45 - 13:55', tId: 'yuchi', itemId: 'yuchi_pier', label: '朝霧碼頭' },
+                    { time: '14:10 - 14:20', tId: 'yuchi', itemId: 'yuchi_visitor2', label: '伊達邵遊客中心' },
+                    { time: '14:40 - 14:50', tId: 'yuchi', itemId: 'yuchi_route_1', label: '東池村' },
+                    { time: '14:55 - 15:05', tId: 'yuchi', itemId: 'yuchi_office', label: '魚池鄉公所' },
+                    { time: '15:15 - 15:25', tId: 'yuchi', itemId: 'yuchi_route_2', label: '養靈社區' },
+                    { time: '15:35 - 15:45', tId: 'yuchi', itemId: 'yuchi_route_3', label: '澀水社區' },
+                    { time: '16:40', label: '返回南投縣政府', type: 'end' }
                 ]
             }
         ];
@@ -429,7 +429,7 @@
                     { id: 3, name: "中山里", path: [[23.752910, 120.683032], [23.752694, 120.682968], [23.752478, 120.682903], [23.752242, 120.682887], [23.751810, 120.682944], [23.751137, 120.683043], [23.750602, 120.683118], [23.750131, 120.683193]], color: "#84cc16" }
                 ],
                 pois: [
-                    { id: "zhushan_toilet", name: "杉林溪紅樓公廁", lat: 23.63589632, lng: 120.7927998, type: "poi" }
+                    { id: "zhushan_toilet", name: "杉林溪紅樓公廁", lat: 23.63589632, lng: 120.7927998, type: "toilet" }
                 ]
             },
             "xinyi": { 
@@ -452,7 +452,7 @@
                 restaurant: null, 
                 routes: [
                     { id: 1, name: "內轆社區", path: [[23.928796, 120.691903], [23.930523, 120.691768], [23.931002, 120.691779], [23.931400, 120.691817], [23.931512, 120.691742]], color: "#06b6d4" }, 
-                    { id: 2, name: "慈慧善行社區", path: [[23.915154, 120.692452], [23.914149, 120.693359], [23.913382, 120.693058]], color: "#d946ef" }, 
+                    { id: 2, name: "慈慧善行協會", path: [[23.915154, 120.692452], [23.914149, 120.693359], [23.913382, 120.693058]], color: "#d946ef" }, 
                     { id: 3, name: "嘉興社區", path: [[23.889016, 120.691666], [23.889456, 120.691097], [23.889770, 120.690733], [23.890055, 120.690293], [23.890369, 120.689842], [23.890228, 120.689696], [23.890060, 120.689550]], color: "#84cc16" }
                 ],
                 pois: [
@@ -565,7 +565,7 @@
         let currentTownshipId = null;
         let currentItemId = null; 
 
-        // 🌟 幫助函數：取得點位的經緯度 (支援 POI)
+        // 🌟 幫助函數：取得點位的經緯度 (支援 POI 與 Toilet)
         function getItemInfo(tId, itemId) {
             const d = mapData[tId];
             if (!d) return null;
@@ -576,7 +576,6 @@
                 const r = d.routes.find(x => x.id === rId);
                 if(r) return { lat: r.path[0][0], lng: r.path[0][1] };
             }
-            // ✨ 新增：支援 POI
             if (d.pois) {
                 const p = d.pois.find(x => x.id === itemId);
                 if (p) return { lat: p.lat, lng: p.lng };
@@ -638,8 +637,9 @@
                 restaurant: createCustomIcon(isDone ? '#64748b' : '#fbbf24', 'ph-fill ph-fork-knife', isDone ? 0.6 : 1), 
                 start: createCustomIcon(isDone ? '#64748b' : '#4ade80', 'ph-fill ph-flag-pennant', isDone ? 0.6 : 1), 
                 end: createCustomIcon(isDone ? '#64748b' : '#f87171', 'ph-fill ph-flag-checkered', isDone ? 0.6 : 1),
-                // ✨ 新增 POI 圖示（紫色代表一般據點）
-                poi: createCustomIcon(isDone ? '#64748b' : '#a78bfa', 'ph-fill ph-buildings', isDone ? 0.6 : 1)
+                poi: createCustomIcon(isDone ? '#64748b' : '#a78bfa', 'ph-fill ph-buildings', isDone ? 0.6 : 1),
+                // ✨ 新增公廁圖示（綠色）
+                toilet: createCustomIcon(isDone ? '#64748b' : '#34d399', 'ph-fill ph-toilet', isDone ? 0.6 : 1)
             }; 
         }
 
@@ -709,6 +709,7 @@
                     let icon;
                     if (type === 'office') icon = getIcons(isDone).office;
                     else if (type === 'restaurant') icon = getIcons(isDone).restaurant;
+                    else if (type === 'toilet') icon = getIcons(isDone).toilet;
                     else icon = getIcons(isDone).poi;
 
                     const marker = L.marker([poi.lat, poi.lng], { icon: icon }).addTo(map);
@@ -717,10 +718,10 @@
                         L.DomEvent.stopPropagation(e);
                         resetRouteHighlights();
                         map.flyTo([poi.lat, poi.lng], 16, { animate: true, duration: 1.2 });
-                        showBottomSheet(poi.name, `<span class="bg-slate-700 px-2 py-0.5 rounded text-xs mr-2">${data.name}</span>類型：${type === 'office' ? '鄉鎮公所' : type === 'restaurant' ? '聚餐餐廳' : '一般考核點'}`, poi.lat, poi.lng, itemId);
+                        showBottomSheet(poi.name, `<span class="bg-slate-700 px-2 py-0.5 rounded text-xs mr-2">${data.name}</span>類型：${type === 'office' ? '鄉鎮公所' : type === 'restaurant' ? '聚餐餐廳' : type === 'toilet' ? '公廁' : '一般考核點'}`, poi.lat, poi.lng, itemId);
                     });
                     
-                    const colorClass = isDone ? 'text-slate-400' : (type === 'office' ? 'text-sky-400' : type === 'restaurant' ? 'text-amber-400' : 'text-purple-400');
+                    const colorClass = isDone ? 'text-slate-400' : (type === 'office' ? 'text-sky-400' : type === 'restaurant' ? 'text-amber-400' : type === 'toilet' ? 'text-emerald-400' : 'text-purple-400');
                     marker.bindTooltip(`<span class="${colorClass} font-bold">${poi.name}${isDone ? ' (已完勘)' : ''}</span>`, { permanent: true, direction: 'top', className: 'glass-tooltip', offset: [0, -20] });
                     activeLayers.push(marker); bounds.push([poi.lat, poi.lng]);
                 };
@@ -774,22 +775,30 @@
                     activeLayers.push(polyline, startMarker, endMarker); route.path.forEach(pt => bounds.push(pt));
                 });
 
-                // ✨ 新增：繪製 POI
+                // ✨ 繪製 POI 與 Toilet
                 if (data.pois) {
                     data.pois.forEach(poi => {
                         const itemId = poi.id;
                         const isDone = inspectionState[itemId];
-                        const marker = L.marker([poi.lat, poi.lng], { icon: getIcons(isDone).poi }).addTo(map);
+                        let icon = getIcons(isDone).poi;
+                        let typeLabel = '一般考核點';
+                        let colorClass = 'text-purple-400';
+                        if (poi.type === 'toilet') {
+                            icon = getIcons(isDone).toilet;
+                            typeLabel = '公廁';
+                            colorClass = 'text-emerald-400';
+                        }
+                        const marker = L.marker([poi.lat, poi.lng], { icon: icon }).addTo(map);
                         
                         marker.on('click', (e) => {
                             L.DomEvent.stopPropagation(e);
                             resetRouteHighlights();
                             map.flyTo([poi.lat, poi.lng], 16, { animate: true, duration: 1.2 });
-                            showBottomSheet(poi.name, `<span class="bg-slate-700 px-2 py-0.5 rounded text-xs mr-2">${data.name}</span>類型：一般考核點`, poi.lat, poi.lng, itemId);
+                            showBottomSheet(poi.name, `<span class="bg-slate-700 px-2 py-0.5 rounded text-xs mr-2">${data.name}</span>類型：${typeLabel}`, poi.lat, poi.lng, itemId);
                         });
                         
-                        const colorClass = isDone ? 'text-slate-400' : 'text-purple-400';
-                        marker.bindTooltip(`<span class="${colorClass} font-bold">${poi.name}${isDone ? ' (已完勘)' : ''}</span>`, { permanent: true, direction: 'top', className: 'glass-tooltip', offset: [0, -20] });
+                        const finalColorClass = isDone ? 'text-slate-400' : colorClass;
+                        marker.bindTooltip(`<span class="${finalColorClass} font-bold">${poi.name}${isDone ? ' (已完勘)' : ''}</span>`, { permanent: true, direction: 'top', className: 'glass-tooltip', offset: [0, -20] });
                         activeLayers.push(marker);
                         bounds.push([poi.lat, poi.lng]);
                     });
@@ -1271,9 +1280,9 @@
                 if (d.office) checkAndRender(d.office.name, 'office', d.office.lat, d.office.lng, `${tId}_office`);
                 d.routes.forEach(r => checkAndRender(r.name, 'route', r.path[0][0], r.path[0][1], `${tId}_route_${r.id}`));
                 if (d.restaurant) checkAndRender(d.restaurant.name, 'restaurant', d.restaurant.lat, d.restaurant.lng, `${tId}_restaurant`);
-                // ✨ 清單模式顯示 POI
+                // ✨ 清單模式顯示 POI 與 Toilet
                 if (d.pois) {
-                    d.pois.forEach(poi => checkAndRender(poi.name, 'poi', poi.lat, poi.lng, poi.id));
+                    d.pois.forEach(poi => checkAndRender(poi.name, poi.type || 'poi', poi.lat, poi.lng, poi.id));
                 }
 
                 if (itemsHTML !== '') {
