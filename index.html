@@ -30,15 +30,15 @@
             overscroll-behavior: none; 
         }
 
-        .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); }
-        .glass-panel { background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7); }
+        .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.15); }
+        .glass-panel { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7); }
 
         #splash-screen { transition: opacity 0.5s ease-in-out; }
         .pulse-ring { animation: pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1); }
         @keyframes pulse { 0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); } 100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } }
 
         .leaflet-control-attribution { display: none !important; }
-        .leaflet-control-zoom { border: none !important; margin-top: 290px !important; }
+        .leaflet-control-zoom { border: none !important; margin-top: 180px !important; }
         .leaflet-bar a { background-color: rgba(15, 23, 42, 0.9) !important; color: #06b6d4 !important; border-color: rgba(255,255,255,0.15) !important;}
 
         .bottom-sheet { transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
@@ -47,14 +47,14 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .glass-tooltip { background: rgba(15, 23, 42, 0.9) !important; backdrop-filter: blur(6px) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; color: #f8fafc !important; border-radius: 8px !important; padding: 5px 10px !important; font-size: 12px !important; font-weight: 600 !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important; white-space: nowrap !important; }
+        .glass-tooltip { background: rgba(15, 23, 42, 0.9) !important; backdrop-filter: blur(6px) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; color: #f8fafc !important; border-radius: 8px !important; padding: 4px 8px !important; font-size: 11px !important; font-weight: 600 !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important; white-space: nowrap !important; }
         .hide-tooltips .glass-tooltip { opacity: 0 !important; visibility: hidden !important; transition: opacity 0.3s ease; }
         
         .user-location-marker { background-color: #3b82f6; border: 2px solid white; border-radius: 50%; width: 16px; height: 16px; box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); position: relative; z-index: 1000; }
         .user-pulse { position: absolute; top: -8px; left: -8px; width: 32px; height: 32px; background-color: rgba(59, 130, 246, 0.6); border-radius: 50%; animation: user-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
         @keyframes user-ping { 75%, 100% { transform: scale(2); opacity: 0; } }
 
-        .safe-top-padding { padding-top: max(0.85rem, env(safe-area-inset-top)); }
+        .safe-top-padding { padding-top: max(0.6rem, env(safe-area-inset-top)); }
         
         path.leaflet-interactive { transition: stroke-opacity 0.6s ease, stroke-width 0.6s ease, stroke 0.6s ease, stroke-dasharray 0.6s ease; }
     </style>
@@ -90,58 +90,61 @@
     <!-- 3. UI 覆蓋層 -->
     <div id="ui-layer" class="absolute inset-0 z-10 pointer-events-none">
         
-        <!-- 頂部高對比實心控制台 (徹底阻絕底圖雜訊與文字干擾) -->
-        <div class="pointer-events-auto absolute top-0 left-0 w-full safe-top-padding px-4 pb-3.5 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 shadow-2xl z-[50]">
-            <div class="flex items-center justify-between mb-2.5">
-                <h2 class="text-base font-bold flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
-                    <i class="ph-fill ph-map-pin text-cyan-400 text-lg" id="header-icon"></i>
-                    <span id="header-title">南投縣清潔考核系統</span>
-                </h2>
-                <div class="flex items-center gap-2">
-                    <button id="sync-status-indicator" onclick="flushSyncQueue()" class="hidden bg-amber-500/20 border border-amber-500/60 text-amber-400 text-xs px-2.5 py-1 rounded-full flex items-center gap-1 font-bold animate-pulse cursor-pointer shadow-sm">
-                        <i class="ph-bold ph-cloud-warning text-sm"></i>
-                        <span id="sync-pending-count">0</span> 筆待傳
+        <!-- 頂部純懸浮膠囊控制群 (Zero-Board Floating Capsules) -->
+        <div class="pointer-events-none absolute top-0 left-0 right-0 z-[50] px-3 safe-top-padding flex flex-col gap-1.5">
+            
+            <!-- 膠囊列 1：標題 + 進度膠囊 + 功能控制 -->
+            <div class="pointer-events-auto flex items-center justify-between bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-full px-3 py-1.5 shadow-[0_4px_20px_rgba(0,0,0,0.4)]">
+                <div class="flex items-center gap-2 overflow-hidden">
+                    <h2 class="text-xs font-bold flex items-center gap-1.5 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 shrink-0">
+                        <i class="ph-fill ph-map-pin text-cyan-400 text-base" id="header-icon"></i>
+                        <span id="header-title" class="truncate max-w-[105px] sm:max-w-none">南投縣考核</span>
+                    </h2>
+
+                    <!-- 達成率微型膠囊 -->
+                    <div class="flex items-center gap-1.5 bg-slate-800/90 px-2 py-0.5 rounded-full border border-slate-700 shadow-inner shrink-0">
+                        <span id="progress-text" class="text-slate-200 font-bold text-[10px]">0/0</span>
+                        <div class="w-12 sm:w-16 bg-slate-950 rounded-full h-1.5 overflow-hidden">
+                            <div id="progress-bar" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <span id="progress-percent" class="text-cyan-400 font-black text-[10px]">0%</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button id="sync-status-indicator" onclick="flushSyncQueue()" class="hidden bg-amber-500/20 border border-amber-500/60 text-amber-300 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-bold animate-pulse cursor-pointer shadow-sm">
+                        <i class="ph-bold ph-cloud-warning text-xs"></i>
+                        <span id="sync-pending-count">0</span>
                     </button>
-                    <button class="glass w-9 h-9 rounded-full text-slate-200 hover:text-white flex justify-center items-center cursor-pointer shadow" onclick="toggleView()" id="btn-toggle-view">
-                        <i class="ph-fill ph-list text-lg"></i>
+                    <button class="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 hover:text-white flex justify-center items-center cursor-pointer shadow transition-colors" onclick="toggleView()" id="btn-toggle-view" title="切換清單模式">
+                        <i class="ph-fill ph-list text-xs"></i>
                     </button>
-                    <button class="glass w-9 h-9 rounded-full text-slate-200 hover:text-white flex justify-center items-center cursor-pointer shadow" onclick="if(currentBounds && map) map.fitBounds(currentBounds, { padding: [50, 50] })">
-                        <i class="ph ph-corners-out text-lg"></i>
+                    <button class="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 hover:text-white flex justify-center items-center cursor-pointer shadow transition-colors" onclick="if(currentBounds && map) map.fitBounds(currentBounds, { padding: [50, 50] })" title="重設地圖範圍">
+                        <i class="ph ph-corners-out text-xs"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- 全局高對比搜尋列 -->
-            <div class="relative w-full mb-2.5">
-                <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base"></i>
-                <input type="text" id="search-input" placeholder="搜尋各鄉鎮公所或村里路線..." class="w-full bg-slate-900 border border-slate-700 rounded-full pl-10 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-colors shadow-inner" oninput="handleSearch()">
-                <div id="search-results" class="absolute top-full left-0 right-0 mt-1.5 bg-slate-900 rounded-xl shadow-2xl z-[60] hidden max-h-48 overflow-y-auto border border-slate-700 divide-y divide-slate-800"></div>
+            <!-- 膠囊列 2：獨立懸浮搜尋膠囊 -->
+            <div class="pointer-events-auto relative w-full">
+                <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="search-input" placeholder="搜尋各公所或村里路線..." class="w-full bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-full pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400 transition-colors shadow-[0_4px_20px_rgba(0,0,0,0.35)]" oninput="handleSearch()">
+                <div id="search-results" class="absolute top-full left-0 right-0 mt-1 bg-slate-900/95 backdrop-blur-md rounded-xl shadow-2xl z-[60] hidden max-h-44 overflow-y-auto border border-slate-700 divide-y divide-slate-800"></div>
             </div>
             
-            <!-- 第一層：13鄉鎮市橫向膠囊列 -->
-            <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 mb-1.5 w-full touch-pan-x" style="-webkit-overflow-scrolling: touch;" id="township-selector"></div>
+            <!-- 膠囊列 3：13 鄉鎮市懸浮膠囊列 -->
+            <div class="pointer-events-auto flex gap-1.5 overflow-x-auto no-scrollbar py-0.5 w-full touch-pan-x" style="-webkit-overflow-scrolling: touch;" id="township-selector"></div>
 
-            <!-- 第二層：5大路線日期卡片列 -->
-            <div class="flex gap-2.5 overflow-x-auto no-scrollbar py-1 mb-2.5 w-full touch-pan-x" style="-webkit-overflow-scrolling: touch;" id="schedule-selector"></div>
-
-            <!-- 第三層：高清晰度戰情進度儀表板 -->
-            <div class="w-full bg-slate-900/90 border border-slate-800/90 rounded-xl px-3 py-2 shadow-inner">
-                <div class="flex justify-between text-[11px] text-slate-200 font-bold mb-1.5">
-                    <span id="progress-text">🏆 總體達成率：0/0 點位</span>
-                    <span id="progress-percent" class="text-cyan-400 font-black">0%</span>
-                </div>
-                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                    <div id="progress-bar" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
-                </div>
-            </div>
+            <!-- 膠囊列 4：5 大路線懸浮卡片列 -->
+            <div class="pointer-events-auto flex gap-2 overflow-x-auto no-scrollbar py-0.5 w-full touch-pan-x" style="-webkit-overflow-scrolling: touch;" id="schedule-selector"></div>
         </div>
 
         <!-- 4. 清單模式 (動態時間軸 List View) -->
-        <div id="list-view" class="pointer-events-auto absolute inset-0 z-[45] bg-slate-950 overflow-y-auto hidden pt-[300px] pb-12 px-4" style="touch-action: pan-y;">
+        <div id="list-view" class="pointer-events-auto absolute inset-0 z-[45] bg-slate-950 overflow-y-auto hidden pt-[180px] pb-12 px-4" style="touch-action: pan-y;">
             <h3 id="list-main-title" class="text-base font-bold text-cyan-400 mb-4 flex items-center gap-2 border-b border-slate-800 pb-2.5">
                 <i class="ph-fill ph-list-bullets text-lg"></i> 任務清單
             </h3>
-            <div id="list-container" class="flex flex-col gap-4"></div>
+            <div id="list-container" class="flex flex-col gap-3.5"></div>
         </div>
 
         <!-- 5. 底部資訊與互動面板 -->
@@ -229,18 +232,15 @@
                 id: 'day1', date: '9/29 (二)', routeName: '路線 1：中寮、南投、名間', townships: ['zhongliao', 'nantou', 'mingjian'],
                 timeline: [
                     { time: '08:30', label: '南投縣政府 (集合出發)', type: 'start' },
-                    // 中寮鄉：公所 ➔ 永芳 ➔ 龍岩 ➔ 清水 (單向深深入山)
                     { time: '09:00 - 09:15', tId: 'zhongliao', itemId: 'zhongliao_office', label: '中寮鄉公所' },
                     { time: '09:25 - 09:40', tId: 'zhongliao', itemId: 'zhongliao_route_1', label: '永芳村' },
                     { time: '09:50 - 10:05', tId: 'zhongliao', itemId: 'zhongliao_route_3', label: '龍岩村' },
                     { time: '10:20 - 10:35', tId: 'zhongliao', itemId: 'zhongliao_route_2', label: '清水村' },
-                    // 南投市
                     { time: '11:00 - 11:15', tId: 'nantou', itemId: 'nantou_office', label: '南投市公所' },
                     { time: '11:30 - 11:45', tId: 'nantou', itemId: 'nantou_route_1', label: '內轆社區' },
                     { time: '12:00 - 13:30', tId: 'nantou', itemId: 'nantou_restaurant', label: '[午餐] 餐廳', type: 'lunch' },
                     { time: '13:40 - 13:55', tId: 'nantou', itemId: 'nantou_route_2', label: '慈慧善行協會' },
                     { time: '14:05 - 14:20', tId: 'nantou', itemId: 'nantou_route_3', label: '嘉興社區' },
-                    // 名間鄉：公所出發 ➔ 仁和 ➔ 東仁 ➔ 萬丹 (順向北上返府)
                     { time: '14:35 - 14:50', tId: 'mingjian', itemId: 'mingjian_office', label: '名間鄉公所' },
                     { time: '15:00 - 15:15', tId: 'mingjian', itemId: 'mingjian_route_3', label: '仁和社區' },
                     { time: '15:25 - 15:40', tId: 'mingjian', itemId: 'mingjian_route_2', label: '東仁社區' },
@@ -268,7 +268,6 @@
                 id: 'day3', date: '10/2 (五)', routeName: '路線 3：信義、水里', townships: ['xinyi', 'shuili'],
                 timeline: [
                     { time: '08:30', label: '南投縣政府 (集合出發)', type: 'start' },
-                    // 水里鄉：公所 ➔ 北埔 ➔ 農富 ➔ 車埕 (平滑東延)
                     { time: '09:15 - 09:30', tId: 'shuili', itemId: 'shuili_office', label: '水里鄉公所' },
                     { time: '09:40 - 09:55', tId: 'shuili', itemId: 'shuili_route_1', label: '北埔村' },
                     { time: '10:05 - 10:20', tId: 'shuili', itemId: 'shuili_route_3', label: '農富村' },
@@ -323,7 +322,7 @@
             }
         ];
 
-        // 🌟 純淨點位資料庫 (僅保留公所、村里/社區與預留餐廳)
+        // 🌟 純淨點位資料庫 (公所、村里/社區、預留餐廳)
         const mapData = {
             "caotun": { 
                 name: "草屯鎮", 
@@ -360,7 +359,7 @@
                 office: { name: "竹山鎮公所", lat: 23.757865157338724, lng: 120.67169998060157, type: "office" }, 
                 restaurant: { name: "餐廳", lat: 23.771160995392858, lng: 120.70068803856547, type: "restaurant" }, 
                 routes: [
-                    { id: 1, name: "竹山里", path: [[23.756848, 120.685829], [23.757083, 120.685687], [23.757275, 120.685555], [23.757385, 120.685475], [23.757454, 120.685593], [23.757582, 120.685802], [23.757751, 120.686121], [23.757859, 120.686293], [23.757922, 120.686416], [23.757999, 120.686548]], color: "#06b6d4" }, 
+                    { id: 1, name: "竹山里", path: [[23.756848, 120.685829], [23.757083, 120.685687], [23.757275, 120.685555], [23.757385, 120.685475], [23.757454, 120.685593], [23.757859, 120.686293], [23.757922, 120.686416], [23.757999, 120.686548]], color: "#06b6d4" }, 
                     { id: 2, name: "中正里", path: [[23.754174, 120.686492], [23.754005, 120.686425], [23.753823, 120.686262], [23.753654, 120.686012], [23.753565, 120.685891], [23.753487, 120.685733], [23.753332, 120.685275]], color: "#d946ef" }, 
                     { id: 3, name: "中山里", path: [[23.752910, 120.683032], [23.752694, 120.682968], [23.752478, 120.682903], [23.752242, 120.682887], [23.751810, 120.682944], [23.751137, 120.683043], [23.750602, 120.683118], [23.750131, 120.683193]], color: "#84cc16" }
                 ]
@@ -638,14 +637,14 @@
         function createCustomIcon(iconColor, iconName, opacity=1) {
             return L.divIcon({ 
                 className: 'custom-leaflet-icon', 
-                html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" style="opacity:${opacity}">
-                        <circle cx="20" cy="20" r="18" fill="rgba(15, 23, 42, 0.9)" stroke="${iconColor}" stroke-width="2.5"/>
+                html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="36" height="36" style="opacity:${opacity}">
+                        <circle cx="20" cy="20" r="18" fill="rgba(15, 23, 42, 0.92)" stroke="${iconColor}" stroke-width="2.5"/>
                         ${opacity === 1 ? `<circle cx="20" cy="20" r="24" fill="none" stroke="${iconColor}" stroke-width="1.2" opacity="0.4" class="pulse"/>` : ''}
                         <foreignObject x="8" y="8" width="24" height="24">
-                            <div xmlns="http://www.w3.org/1999/xhtml" style="display:flex; justify-content:center; align-items:center; height:100%; color:${iconColor}; font-size:18px;"><i class="${iconName}"></i></div>
+                            <div xmlns="http://www.w3.org/1999/xhtml" style="display:flex; justify-content:center; align-items:center; height:100%; color:${iconColor}; font-size:16px;"><i class="${iconName}"></i></div>
                         </foreignObject>
                        </svg>`, 
-                iconSize: [40, 40], iconAnchor: [20, 20] 
+                iconSize: [36, 36], iconAnchor: [18, 18] 
             });
         }
 
@@ -700,7 +699,7 @@
                 routePolylines[itemId].bringToFront(); 
                 
                 map.flyToBounds(routePolylines[itemId].getBounds(), {
-                    paddingTopLeft: [30, 300], paddingBottomRight: [30, window.innerHeight * 0.45], 
+                    paddingTopLeft: [20, 185], paddingBottomRight: [20, window.innerHeight * 0.45], 
                     maxZoom: 16, animate: true, duration: 1.2
                 });
             }
@@ -734,7 +733,7 @@
                     });
                     
                     const colorClass = isDone ? 'text-slate-400' : (type === 'office' ? 'text-cyan-400' : 'text-amber-400');
-                    marker.bindTooltip(`<span class="${colorClass} font-bold">${item.name}${isDone ? ' (已完勘)' : ''}</span>`, { permanent: true, direction: 'top', className: 'glass-tooltip', offset: [0, -20] });
+                    marker.bindTooltip(`<span class="${colorClass} font-bold">${item.name}${isDone ? ' (已完勘)' : ''}</span>`, { permanent: true, direction: 'top', className: 'glass-tooltip', offset: [0, -18] });
                     activeLayers.push(marker); bounds.push([item.lat, item.lng]);
                 };
 
@@ -760,7 +759,7 @@
                         const descHTML = `
                             <div class="mb-3"><span class="bg-slate-700 px-2 py-0.5 rounded text-xs text-white shadow-md">${data.name}</span></div>
                             <div class="flex flex-col gap-2 mb-3">
-                                <div class="bg-slate-900 p-3 rounded-xl border border-emerald-500/40 flex items-center justify-between shadow-lg relative overflow-hidden">
+                                <div class="bg-slate-900/95 p-3 rounded-xl border border-emerald-500/40 flex items-center justify-between shadow-lg relative overflow-hidden">
                                     <div class="absolute -right-4 -top-4 w-16 h-16 bg-emerald-500/10 rounded-full"></div>
                                     <div class="flex items-center gap-3 relative z-10"><div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0"><i class="ph-fill ph-flag-pennant text-xl"></i></div>
                                         <div><div class="font-bold text-white text-sm tracking-wide">起點：${route.name}起點</div><div class="text-[11px] text-slate-400 font-mono mt-0.5">${startPt[0].toFixed(5)}, ${startPt[1].toFixed(5)}</div></div>
@@ -768,7 +767,7 @@
                                     <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${startPt[0]},${startPt[1]}', '_blank')" class="bg-emerald-600 hover:bg-emerald-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-95 relative z-10 shrink-0 cursor-pointer"><i class="ph-bold ph-navigation-arrow text-lg"></i></button>
                                 </div>
                                 <div class="w-1 h-3 bg-gradient-to-b from-emerald-500/50 to-rose-500/50 mx-auto rounded-full"></div>
-                                <div class="bg-slate-900 p-3 rounded-xl border border-rose-500/40 flex items-center justify-between shadow-lg relative overflow-hidden">
+                                <div class="bg-slate-900/95 p-3 rounded-xl border border-rose-500/40 flex items-center justify-between shadow-lg relative overflow-hidden">
                                     <div class="absolute -right-4 -top-4 w-16 h-16 bg-rose-500/10 rounded-full"></div>
                                     <div class="flex items-center gap-3 relative z-10"><div class="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-400 shrink-0"><i class="ph-fill ph-flag-checkered text-xl"></i></div>
                                         <div><div class="font-bold text-white text-sm tracking-wide">終點：${route.name}終點</div><div class="text-[11px] text-slate-400 font-mono mt-0.5">${endPt[0].toFixed(5)}, ${endPt[1].toFixed(5)}</div></div>
@@ -797,10 +796,10 @@
             if (!schedule) return;
 
             const headerTitle = document.getElementById('header-title');
-            if(headerTitle) headerTitle.innerText = `${schedule.date} 任務`;
+            if(headerTitle) headerTitle.innerText = `${schedule.date.split(' ')[0]} 任務`;
             
             const headerIcon = document.getElementById('header-icon');
-            if(headerIcon) headerIcon.className = "ph-fill ph-calendar-check text-cyan-400";
+            if(headerIcon) headerIcon.className = "ph-fill ph-calendar-check text-cyan-400 text-base";
             
             const listTitle = document.getElementById('list-main-title');
             if(listTitle) listTitle.innerHTML = `<i class="ph-fill ph-calendar-check"></i> ${schedule.date} ${schedule.routeName}`;
@@ -810,16 +809,16 @@
                 const s = scheduleData.find(x => x.id === sId);
                 if (!s) return;
                 if(sId === scheduleId) {
-                    btn.className = 'schedule-btn shrink-0 min-w-[124px] flex flex-col items-center justify-center rounded-xl p-2 transition-all cursor-pointer border bg-cyan-950/90 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.4)]';
-                    btn.innerHTML = `<span class="text-white font-black text-xs tracking-wide drop-shadow-md">${s.date}</span><span class="text-cyan-300 text-[11px] font-bold mt-0.5">${s.routeName}</span>`;
+                    btn.className = 'schedule-btn shrink-0 min-w-[108px] flex flex-col items-center justify-center rounded-xl p-1.5 transition-all cursor-pointer border bg-cyan-950/90 backdrop-blur-md border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.5)]';
+                    btn.innerHTML = `<span class="text-white font-black text-xs tracking-wide drop-shadow-md">${s.date}</span><span class="text-cyan-300 text-[10px] font-bold mt-0.5">${s.routeName}</span>`;
                 } else {
-                    btn.className = 'schedule-btn shrink-0 min-w-[124px] flex flex-col items-center justify-center rounded-xl p-2 transition-all cursor-pointer border bg-slate-900/90 border-slate-700 hover:border-slate-500 shadow';
-                    btn.innerHTML = `<span class="text-slate-100 font-bold text-xs tracking-wide">${s.date}</span><span class="text-slate-300 text-[11px] font-medium mt-0.5">${s.routeName}</span>`;
+                    btn.className = 'schedule-btn shrink-0 min-w-[108px] flex flex-col items-center justify-center rounded-xl p-1.5 transition-all cursor-pointer border bg-slate-900/90 backdrop-blur-md border-slate-700/80 hover:border-slate-500 shadow-md';
+                    btn.innerHTML = `<span class="text-slate-200 font-bold text-xs tracking-wide">${s.date}</span><span class="text-slate-400 text-[10px] font-medium mt-0.5">${s.routeName}</span>`;
                 }
             });
 
             document.querySelectorAll('.township-pill').forEach(btn => {
-                btn.className = 'township-pill shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow border bg-slate-900 border-slate-700 text-slate-200 cursor-pointer hover:bg-slate-800 hover:text-white';
+                btn.className = 'township-pill shrink-0 whitespace-nowrap px-3 py-1 rounded-full text-[11px] font-bold transition-all shadow-md border bg-slate-900/90 backdrop-blur-md border-slate-700/80 text-slate-200 cursor-pointer hover:bg-slate-800 hover:text-white';
             });
 
             activeLayers.forEach(layer => map.removeLayer(layer)); activeLayers = []; routePolylines = {};
@@ -847,16 +846,16 @@
             if(headerTitle) headerTitle.innerText = `${data.name} 視角`;
             
             const headerIcon = document.getElementById('header-icon');
-            if(headerIcon) headerIcon.className = "ph-fill ph-map-pin text-rose-400";
+            if(headerIcon) headerIcon.className = "ph-fill ph-map-pin text-rose-400 text-base";
 
             const listTitle = document.getElementById('list-main-title');
             if(listTitle) listTitle.innerHTML = `<i class="ph-fill ph-map-pin"></i> ${data.name} 任務清單`;
 
             document.querySelectorAll('.township-pill').forEach(btn => {
                 if(btn.dataset.id === tId) {
-                    btn.className = 'township-pill shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-lg bg-rose-600 border border-rose-400 text-white cursor-pointer shadow-[0_0_12px_rgba(244,63,94,0.5)]';
+                    btn.className = 'township-pill shrink-0 whitespace-nowrap px-3 py-1 rounded-full text-[11px] font-bold transition-all shadow-lg bg-rose-600 border border-rose-400 text-white cursor-pointer shadow-[0_0_10px_rgba(244,63,94,0.5)]';
                 } else {
-                    btn.className = 'township-pill shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow border bg-slate-900 border-slate-700 text-slate-200 cursor-pointer hover:bg-slate-800 hover:text-white';
+                    btn.className = 'township-pill shrink-0 whitespace-nowrap px-3 py-1 rounded-full text-[11px] font-bold transition-all shadow-md border bg-slate-900/90 backdrop-blur-md border-slate-700/80 text-slate-200 cursor-pointer hover:bg-slate-800 hover:text-white';
                 }
             });
 
@@ -864,8 +863,8 @@
                 const sId = btn.dataset.id;
                 const s = scheduleData.find(x => x.id === sId);
                 if (!s) return;
-                btn.className = 'schedule-btn shrink-0 min-w-[124px] flex flex-col items-center justify-center rounded-xl p-2 transition-all cursor-pointer border bg-slate-900/90 border-slate-700 hover:border-slate-500 shadow';
-                btn.innerHTML = `<span class="text-slate-100 font-bold text-xs tracking-wide">${s.date}</span><span class="text-slate-300 text-[11px] font-medium mt-0.5">${s.routeName}</span>`;
+                btn.className = 'schedule-btn shrink-0 min-w-[108px] flex flex-col items-center justify-center rounded-xl p-1.5 transition-all cursor-pointer border bg-slate-900/90 backdrop-blur-md border-slate-700/80 hover:border-slate-500 shadow-md';
+                btn.innerHTML = `<span class="text-slate-200 font-bold text-xs tracking-wide">${s.date}</span><span class="text-slate-400 text-[10px] font-medium mt-0.5">${s.routeName}</span>`;
             });
 
             activeLayers.forEach(layer => map.removeLayer(layer)); activeLayers = []; routePolylines = {};
@@ -884,11 +883,10 @@
         }
 
         function updateProgressBar() {
-            let total = 0; let comp = 0; let titleText = "";
+            let total = 0; let comp = 0;
 
             if (currentMode === 'schedule' && currentScheduleId) {
                 const schedule = scheduleData.find(s => s.id === currentScheduleId);
-                titleText = `🏆 ${schedule.date.split(' ')[0]} 達成率：`;
                 if(schedule.timeline) {
                     const actionableItems = schedule.timeline.filter(i => i.itemId);
                     total = actionableItems.length;
@@ -896,7 +894,6 @@
                 }
             } else if (currentMode === 'township' && currentTownshipId) {
                 const data = mapData[currentTownshipId];
-                titleText = `📍 ${data.name} 達成率：`;
                 if (data.office) { total++; if(inspectionState[`${currentTownshipId}_office`]) comp++; }
                 if (data.restaurant) { total++; if(inspectionState[`${currentTownshipId}_restaurant`]) comp++; }
                 data.routes.forEach(r => { total++; if(inspectionState[`${currentTownshipId}_route_${r.id}`]) comp++; });
@@ -905,7 +902,7 @@
             const pct = total === 0 ? 0 : Math.round((comp / total) * 100);
             
             const progressText = document.getElementById('progress-text');
-            if(progressText) progressText.innerText = `${titleText}${comp} / ${total} 點位`;
+            if(progressText) progressText.innerText = `${comp}/${total}`;
             
             const progressPercent = document.getElementById('progress-percent');
             if(progressPercent) progressPercent.innerText = `${pct}%`;
@@ -1274,9 +1271,9 @@
 
             if (listEl && btnIcon) {
                 if (isListView) {
-                    listEl.classList.remove('hidden'); btnIcon.className = "ph-fill ph-map-trifold text-lg text-cyan-400"; renderListView();
+                    listEl.classList.remove('hidden'); btnIcon.className = "ph-fill ph-map-trifold text-xs text-cyan-400"; renderListView();
                 } else {
-                    listEl.classList.add('hidden'); btnIcon.className = "ph-fill ph-list text-lg"; if (map) map.invalidateSize(); 
+                    listEl.classList.add('hidden'); btnIcon.className = "ph-fill ph-list text-xs"; if (map) map.invalidateSize(); 
                 }
             }
         }
@@ -1290,7 +1287,7 @@
                 const schedule = scheduleData.find(s => s.id === currentScheduleId);
                 if(!schedule || !schedule.timeline) return;
                 
-                let timelineHTML = `<div class="relative border-l-2 border-slate-700 ml-4 pl-6 py-2 flex flex-col gap-6">`;
+                let timelineHTML = `<div class="relative border-l-2 border-slate-700 ml-4 pl-6 py-2 flex flex-col gap-5">`;
                 
                 schedule.timeline.forEach((item) => {
                     if (item.type === 'start' || item.type === 'end' || item.type === 'lunch') {
@@ -1303,8 +1300,8 @@
                         timelineHTML += `
                             <div class="relative">
                                 <div class="absolute -left-[31px] top-1.5 w-4 h-4 ${dotColor} rounded-full ring-4 ring-slate-950"></div>
-                                <div class="text-xs font-bold text-slate-400 mb-0.5">${item.time}</div>
-                                <div class="text-slate-200 font-bold text-sm ${textColor}">${item.label}</div>
+                                <div class="text-[11px] font-bold text-slate-400 mb-0.5">${item.time}</div>
+                                <div class="text-slate-200 font-bold text-xs ${textColor}">${item.label}</div>
                             </div>
                         `;
                     } else {
@@ -1321,19 +1318,19 @@
                         
                         timelineHTML += `
                             <div class="relative">
-                                <div class="absolute -left-[31px] top-4 w-4 h-4 ${dotColor} rounded-full ring-4 ring-slate-950 shadow-[0_0_10px_currentColor]"></div>
-                                <div class="text-xs font-bold text-cyan-400 mb-1.5">${item.time}</div>
+                                <div class="absolute -left-[31px] top-3.5 w-4 h-4 ${dotColor} rounded-full ring-4 ring-slate-950 shadow-[0_0_10px_currentColor]"></div>
+                                <div class="text-[11px] font-bold text-cyan-400 mb-1">${item.time}</div>
                                 
-                                <div class="bg-slate-900 border ${borderColor} p-3 rounded-xl shadow-lg flex items-center justify-between cursor-pointer active:scale-95 transition-transform" onclick="jumpToMap('${item.tId}', '${item.itemId}', ${lat}, ${lng}, '${item.label}')">
+                                <div class="bg-slate-900/95 backdrop-blur-md border ${borderColor} p-3 rounded-xl shadow-lg flex items-center justify-between cursor-pointer active:scale-95 transition-transform" onclick="jumpToMap('${item.tId}', '${item.itemId}', ${lat}, ${lng}, '${item.label}')">
                                     <div class="flex-1 pr-2">
-                                        <div class="text-[11px] text-slate-400 mb-1 flex gap-2 flex-wrap">
-                                            <span class="bg-slate-800 px-2 py-0.5 rounded text-cyan-300 border border-slate-700 font-medium">${mapData[item.tId].name}</span>
+                                        <div class="text-[10px] text-slate-400 mb-1 flex gap-2 flex-wrap">
+                                            <span class="bg-slate-800 px-1.5 py-0.5 rounded text-cyan-300 border border-slate-700 font-medium">${mapData[item.tId].name}</span>
                                             ${isDone ? '<span class="text-emerald-400 flex items-center gap-1 font-bold"><i class="ph-fill ph-check-circle"></i> 已完勘</span>' : ''}
                                             ${hasPhoto ? '<span class="text-amber-400 flex items-center gap-1 font-bold"><i class="ph-fill ph-camera"></i> 照片</span>' : ''}
                                         </div>
-                                        <h4 class="text-white font-bold text-sm leading-tight">${item.label}</h4>
+                                        <h4 class="text-white font-bold text-xs leading-tight">${item.label}</h4>
                                     </div>
-                                    <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400 shrink-0 shadow-inner"><i class="ph-bold ph-caret-right text-base"></i></div>
+                                    <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400 shrink-0 shadow-inner"><i class="ph-bold ph-caret-right text-sm"></i></div>
                                 </div>
                             </div>
                         `;
@@ -1370,16 +1367,16 @@
                     
                     const hasPhoto = (inspectionPhotos[itemId] && inspectionPhotos[itemId].length > 0);
                     itemsHTML += `
-                        <div class="bg-slate-900 border ${isDone ? 'border-emerald-500/40' : 'border-slate-800'} p-3.5 rounded-xl shadow-lg flex items-center justify-between cursor-pointer active:scale-95 transition-transform" onclick="jumpToMap('${tId}', '${itemId}', ${lat}, ${lng}, '${title}')">
+                        <div class="bg-slate-900/95 backdrop-blur-md border ${isDone ? 'border-emerald-500/40' : 'border-slate-800'} p-3 rounded-xl shadow-lg flex items-center justify-between cursor-pointer active:scale-95 transition-transform" onclick="jumpToMap('${tId}', '${itemId}', ${lat}, ${lng}, '${title}')">
                             <div>
-                                <div class="text-[11px] text-slate-400 mb-1 flex gap-2">
-                                    <span class="bg-slate-800 px-2 py-0.5 rounded text-cyan-300 border border-slate-700">${d.name}</span>
+                                <div class="text-[10px] text-slate-400 mb-1 flex gap-2">
+                                    <span class="bg-slate-800 px-1.5 py-0.5 rounded text-cyan-300 border border-slate-700">${d.name}</span>
                                     ${isDone ? '<span class="text-emerald-400 font-bold"><i class="ph-fill ph-check-circle"></i> 已完勘</span>' : ''}
                                     ${hasPhoto ? '<span class="text-amber-400 font-bold"><i class="ph-fill ph-camera"></i> 照片</span>' : ''}
                                 </div>
-                                <h4 class="text-white font-bold text-base">${title}</h4>
+                                <h4 class="text-white font-bold text-xs">${title}</h4>
                             </div>
-                            <div class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400"><i class="ph-fill ph-navigation-arrow text-base"></i></div>
+                            <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400"><i class="ph-fill ph-navigation-arrow text-sm"></i></div>
                         </div>`;
                 };
 
@@ -1389,13 +1386,13 @@
 
                 if (itemsHTML !== '') {
                     container.innerHTML += `
-                        <div class="mt-4 mb-2">
-                            <h4 class="text-white font-bold text-sm flex items-center gap-2 bg-slate-900 px-3 py-2 rounded-lg border border-slate-800">
+                        <div class="mt-3 mb-1.5">
+                            <h4 class="text-white font-bold text-xs flex items-center gap-1.5 bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-800 shadow">
                                 <i class="ph-fill ph-map-pin text-rose-400"></i> ${d.name} 
-                                <span class="text-xs text-slate-400 font-normal ml-auto">進度 ${tComp}/${tTotal}</span>
+                                <span class="text-[10px] text-slate-400 font-normal ml-auto">進度 ${tComp}/${tTotal}</span>
                             </h4>
                         </div>
-                        <div class="flex flex-col gap-2.5 pl-2 border-l-2 border-slate-800 ml-3">${itemsHTML}</div>
+                        <div class="flex flex-col gap-2 pl-2 border-l-2 border-slate-800 ml-3">${itemsHTML}</div>
                     `;
                 }
             });
@@ -1427,7 +1424,7 @@
                 const descHTML = `
                     <div class="mb-3"><span class="bg-slate-700 px-2 py-0.5 rounded text-xs text-white shadow-md">${data.name}</span></div>
                     <div class="flex flex-col gap-2 mb-3">
-                        <div class="bg-slate-900 p-3 rounded-xl border border-emerald-500/40 flex items-center justify-between shadow-lg relative overflow-hidden">
+                        <div class="bg-slate-900/95 p-3 rounded-xl border border-emerald-500/40 flex items-center justify-between shadow-lg relative overflow-hidden">
                             <div class="absolute -right-4 -top-4 w-16 h-16 bg-emerald-500/10 rounded-full"></div>
                             <div class="flex items-center gap-3 relative z-10"><div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0"><i class="ph-fill ph-flag-pennant text-xl"></i></div>
                                 <div><div class="font-bold text-white text-sm tracking-wide">起點：${route.name}起點</div><div class="text-[11px] text-slate-400 font-mono mt-0.5">${startPt[0].toFixed(5)}, ${startPt[1].toFixed(5)}</div></div>
@@ -1435,7 +1432,7 @@
                             <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${startPt[0]},${startPt[1]}', '_blank')" class="bg-emerald-600 hover:bg-emerald-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-95 relative z-10 shrink-0 cursor-pointer"><i class="ph-bold ph-navigation-arrow text-lg"></i></button>
                         </div>
                         <div class="w-1 h-3 bg-gradient-to-b from-emerald-500/50 to-rose-500/50 mx-auto rounded-full"></div>
-                        <div class="bg-slate-900 p-3 rounded-xl border border-rose-500/40 flex items-center justify-between shadow-lg relative overflow-hidden">
+                        <div class="bg-slate-900/95 p-3 rounded-xl border border-rose-500/40 flex items-center justify-between shadow-lg relative overflow-hidden">
                             <div class="absolute -right-4 -top-4 w-16 h-16 bg-rose-500/10 rounded-full"></div>
                             <div class="flex items-center gap-3 relative z-10"><div class="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-400 shrink-0"><i class="ph-fill ph-flag-checkered text-xl"></i></div>
                                 <div><div class="font-bold text-white text-sm tracking-wide">終點：${route.name}終點</div><div class="text-[11px] text-slate-400 font-mono mt-0.5">${endPt[0].toFixed(5)}, ${endPt[1].toFixed(5)}</div></div>
@@ -1471,7 +1468,7 @@
                     const checkAdd = (name, lat, lng, itemId) => {
                         if (name.includes(input) || d.name.includes(input)) {
                             count++;
-                            resultBox.innerHTML += `<div class="px-4 py-2.5 hover:bg-slate-800 cursor-pointer text-xs" onclick="jumpToMap('${tId}', '${itemId}', ${lat}, ${lng}, '${name}')"><div class="text-[10px] text-cyan-400 mb-0.5 font-bold">${d.name}</div><div class="text-white font-medium">${name}</div></div>`;
+                            resultBox.innerHTML += `<div class="px-3.5 py-2 hover:bg-slate-800 cursor-pointer text-xs" onclick="jumpToMap('${tId}', '${itemId}', ${lat}, ${lng}, '${name}')"><div class="text-[10px] text-cyan-400 mb-0.5 font-bold">${d.name}</div><div class="text-white font-medium">${name}</div></div>`;
                         }
                     };
                     if (d.office) checkAdd(d.office.name, d.office.lat, d.office.lng, `${tId}_office`);
@@ -1479,7 +1476,7 @@
                     if (d.restaurant) checkAdd(d.restaurant.name, d.restaurant.lat, d.restaurant.lng, `${tId}_restaurant`);
                 });
                 if (count > 0) resultBox.classList.remove('hidden'); 
-                else { resultBox.innerHTML = '<div class="px-4 py-3 text-slate-400 text-xs">無符合結果</div>'; resultBox.classList.remove('hidden'); }
+                else { resultBox.innerHTML = '<div class="px-3 py-2 text-slate-400 text-xs">無符合結果</div>'; resultBox.classList.remove('hidden'); }
             }
         }
 
@@ -1539,27 +1536,27 @@
         window.onload = () => {
             initMap();
             
-            // 初始化 13 鄉鎮市高對比按鈕
+            // 初始化 13 鄉鎮市懸浮膠囊
             const townshipSelector = document.getElementById('township-selector');
             if (townshipSelector) {
                 Object.keys(mapData).forEach((id) => {
                     const btn = document.createElement('div');
                     btn.dataset.id = id;
-                    btn.className = `township-pill shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow border bg-slate-900 border-slate-700 text-slate-200 cursor-pointer hover:bg-slate-800 hover:text-white`;
+                    btn.className = `township-pill shrink-0 whitespace-nowrap px-3 py-1 rounded-full text-[11px] font-bold transition-all shadow-md border bg-slate-900/90 backdrop-blur-md border-slate-700/80 text-slate-200 cursor-pointer hover:bg-slate-800 hover:text-white`;
                     btn.innerText = mapData[id].name;
                     btn.onclick = () => loadTownship(id);
                     townshipSelector.appendChild(btn);
                 });
             }
 
-            // 初始化 5 大路線高對比卡片
+            // 初始化 5 大路線懸浮卡片膠囊
             const scheduleSelector = document.getElementById('schedule-selector');
             if (scheduleSelector) {
                 scheduleData.forEach((s) => {
                     const btn = document.createElement('div');
                     btn.dataset.id = s.id;
-                    btn.className = `schedule-btn shrink-0 min-w-[124px] flex flex-col items-center justify-center rounded-xl p-2 transition-all cursor-pointer border bg-slate-900/90 border-slate-700 hover:border-slate-500 shadow`;
-                    btn.innerHTML = `<span class="date-text text-slate-100 font-bold text-xs tracking-wide">${s.date}</span><span class="route-text text-slate-300 text-[11px] font-medium mt-0.5">${s.routeName}</span>`;
+                    btn.className = `schedule-btn shrink-0 min-w-[108px] flex flex-col items-center justify-center rounded-xl p-1.5 transition-all cursor-pointer border bg-slate-900/90 backdrop-blur-md border-slate-700/80 hover:border-slate-500 shadow-md`;
+                    btn.innerHTML = `<span class="date-text text-slate-200 font-bold text-xs tracking-wide">${s.date}</span><span class="route-text text-slate-400 text-[10px] font-medium mt-0.5">${s.routeName}</span>`;
                     btn.onclick = () => loadSchedule(s.id);
                     scheduleSelector.appendChild(btn);
                 });
@@ -1569,7 +1566,7 @@
                 flushSyncQueue();
             });
 
-            // 免密碼直接啟動同步並進入系統
+            // 免密碼直入主系統
             performSyncAndEnter();
         };
         
