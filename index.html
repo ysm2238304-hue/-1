@@ -128,7 +128,7 @@
             <!-- 膠囊列 2：獨立懸浮搜尋膠囊 -->
             <div class="pointer-events-auto relative w-full">
                 <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                <input type="text" id="search-input" placeholder="搜尋各公所或村里路線..." class="w-full bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-full pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400 transition-colors shadow-[0_4px_20px_rgba(0,0,0,0.35)]" oninput="handleSearch()">
+                <input type="text" id="search-input" placeholder="搜尋各公所、路線或餐廳..." class="w-full bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-full pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400 transition-colors shadow-[0_4px_20px_rgba(0,0,0,0.35)]" oninput="handleSearch()">
                 <div id="search-results" class="absolute top-full left-0 right-0 mt-1 bg-slate-900/95 backdrop-blur-md rounded-xl shadow-2xl z-[60] hidden max-h-44 overflow-y-auto border border-slate-700 divide-y divide-slate-800"></div>
             </div>
             
@@ -226,7 +226,7 @@
     <script>
         const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlCyvJV7zmDTcd92EaT_lCLpcunG2ppcXvpLkA5lDt9Wtb-VBXacRWIe-XjDGuBIJabA/exec"; 
 
-        // 🌟 5 大路線時程配置 (中寮、水里、名間空間順向流線)
+        // 🌟 5 大路線時程配置 (午餐時段固定為 12:00 - 13:30，括號資訊作為提醒標籤)
         const scheduleData = [
             { 
                 id: 'day1', date: '9/29 (二)', routeName: '路線 1：中寮、南投、名間', townships: ['zhongliao', 'nantou', 'mingjian'],
@@ -238,7 +238,7 @@
                     { time: '10:20 - 10:35', tId: 'zhongliao', itemId: 'zhongliao_route_2', label: '清水村' },
                     { time: '11:00 - 11:15', tId: 'nantou', itemId: 'nantou_office', label: '南投市公所' },
                     { time: '11:30 - 11:45', tId: 'nantou', itemId: 'nantou_route_1', label: '內轆社區' },
-                    { time: '12:00 - 13:30', tId: 'nantou', itemId: 'nantou_restaurant', label: '[午餐] 餐廳', type: 'lunch' },
+                    { time: '12:00 - 13:30', tId: 'nantou', itemId: 'nantou_restaurant', label: '[午餐] 養鍋 Yang Guo 石頭涮涮鍋 (訂位時間 11:40)', type: 'lunch' },
                     { time: '13:40 - 13:55', tId: 'nantou', itemId: 'nantou_route_2', label: '慈慧善行協會' },
                     { time: '14:05 - 14:20', tId: 'nantou', itemId: 'nantou_route_3', label: '嘉興社區' },
                     { time: '14:35 - 14:50', tId: 'mingjian', itemId: 'mingjian_office', label: '名間鄉公所' },
@@ -256,7 +256,7 @@
                     { time: '09:35 - 09:50', tId: 'guoxing', itemId: 'guoxing_route_3', label: '國姓社區發展協會' },
                     { time: '10:05 - 10:20', tId: 'guoxing', itemId: 'guoxing_route_2', label: '石門村' },
                     { time: '10:35 - 10:50', tId: 'guoxing', itemId: 'guoxing_route_1', label: '北港村' },
-                    { time: '12:00 - 13:30', tId: 'caotun', itemId: 'caotun_restaurant', label: '[午餐] 餐廳', type: 'lunch' },
+                    { time: '12:00 - 13:30', tId: 'caotun', itemId: 'caotun_restaurant', label: '[午餐] 人本自然台菜餐廳 (訂位時間 12:00)', type: 'lunch' },
                     { time: '13:40 - 13:55', tId: 'caotun', itemId: 'caotun_office', label: '草屯鎮公所' },
                     { time: '14:05 - 14:20', tId: 'caotun', itemId: 'caotun_route_1', label: '中山里' },
                     { time: '14:35 - 14:50', tId: 'caotun', itemId: 'caotun_route_2', label: '玉峰里' },
@@ -322,12 +322,18 @@
             }
         ];
 
-        // 🌟 純淨點位資料庫 (公所、村里/社區、預留餐廳)
+        // 🌟 純淨點位資料庫 (座標校正版：養鍋 23.907754, 120.689946；人本自然 23.978499, 120.688052)
         const mapData = {
             "caotun": { 
                 name: "草屯鎮", 
                 office: { name: "草屯鎮公所", lat: 23.973701202271474, lng: 120.68022654598622, type: "office" }, 
-                restaurant: { name: "餐廳", lat: 23.97243269542358, lng: 120.68644082559986, type: "restaurant" }, 
+                restaurant: { 
+                    name: "人本自然台菜餐廳 (訂位時間 12:00)", 
+                    mapUrl: "https://maps.app.goo.gl/TQsnCrgYbUo8S6FUA",
+                    lat: 23.978498834391132, 
+                    lng: 120.688052127045, 
+                    type: "restaurant" 
+                }, 
                 routes: [
                     { id: 1, name: "中山里", path: [[23.973648, 120.681481], [23.973460, 120.682347], [23.974195, 120.682406], [23.972881, 120.682341]], color: "#06b6d4" }, 
                     { id: 2, name: "玉峰里", path: [[23.982066, 120.688199], [23.981820, 120.688376], [23.982414, 120.689186], [23.982874, 120.688768], [23.982624, 120.687776], [23.982291, 120.688017]], color: "#d946ef" }, 
@@ -377,7 +383,13 @@
             "nantou": { 
                 name: "南投市", 
                 office: { name: "南投市公所", lat: 23.91151328625724, lng: 120.68707485194145, type: "office" }, 
-                restaurant: { name: "餐廳", lat: 23.9103963919249, lng: 120.69242017050668, type: "restaurant" }, 
+                restaurant: { 
+                    name: "養鍋 Yang Guo 石頭涮涮鍋 (訂位時間 11:40)", 
+                    mapUrl: "https://maps.app.goo.gl/VJ8E6HfUPupeSjex7",
+                    lat: 23.907753586284198, 
+                    lng: 120.68994569052859, 
+                    type: "restaurant" 
+                }, 
                 routes: [
                     { id: 1, name: "內轆社區", path: [[23.928796, 120.691903], [23.930523, 120.691768], [23.931002, 120.691779], [23.931400, 120.691817], [23.931512, 120.691742]], color: "#06b6d4" }, 
                     { id: 2, name: "慈慧善行協會", path: [[23.915154, 120.692452], [23.914149, 120.693359], [23.913382, 120.693058]], color: "#d946ef" }, 
@@ -1244,7 +1256,20 @@
                     const townshipName = mapData[tId] ? mapData[tId].name : '';
                     const cleanTitle = title.replace(/\[.*?\]/g, '').trim();
                     const destinationQuery = encodeURIComponent(`${townshipName} ${cleanTitle}`);
-                    navBtn.onclick = () => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${destinationQuery}`, '_blank'); }; 
+                    
+                    // 專屬 Google Maps 短網址直接喚起
+                    let directMapUrl = null;
+                    if (itemId.endsWith('_restaurant') && mapData[tId]?.restaurant?.mapUrl) {
+                        directMapUrl = mapData[tId].restaurant.mapUrl;
+                    }
+
+                    navBtn.onclick = () => { 
+                        if (directMapUrl) {
+                            window.open(directMapUrl, '_blank');
+                        } else {
+                            window.open(`https://www.google.com/maps/dir/?api=1&destination=${destinationQuery}`, '_blank');
+                        }
+                    }; 
                 }
             }
             
