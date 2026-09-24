@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- PWA Meta Tags：狀態列改為黑色以消除 iOS 頂部漸變暗霧 -->
+    <!-- PWA Meta Tags：純黑狀態列，消除 iOS 頂部漸變暗霧 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="清潔考核">
@@ -30,7 +30,7 @@
             overscroll-behavior: none; 
         }
 
-        /* 零霧化、高對比純實體面板 */
+        /* 零霧化純實體面板 */
         .glass-panel { background: #020617; border-top: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.9); }
 
         #splash-screen { transition: opacity 0.5s ease-in-out; }
@@ -39,7 +39,7 @@
 
         .leaflet-control-attribution { display: none !important; }
         
-        /* 縮放控制項樣式（方案 A：右下懸浮避讓） */
+        /* 縮放控制項置於右下角，避開頂部膠囊列 */
         .leaflet-bottom.leaflet-right { margin-bottom: 85px !important; margin-right: 16px !important; }
         .leaflet-control-zoom { border: 1px solid #334155 !important; border-radius: 12px !important; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.6) !important; margin: 0 !important; }
         .leaflet-bar a { background-color: #020617 !important; color: #06b6d4 !important; border-bottom: 1px solid #334155 !important; width: 36px !important; height: 36px !important; line-height: 36px !important; }
@@ -95,10 +95,10 @@
     <!-- 3. UI 覆蓋層 -->
     <div id="ui-layer" class="absolute inset-0 z-10 pointer-events-none">
         
-        <!-- 頂部純懸浮膠囊控制群 (100% 實心純色深黑底、無大陰影、零霧化擴散) -->
+        <!-- 頂部純懸浮膠囊控制群 (100% 純色實心黑底、無霧化擴散) -->
         <div class="pointer-events-none absolute top-0 left-0 right-0 z-[50] px-3 safe-top-padding flex flex-col gap-1.5 overflow-hidden">
             
-            <!-- 膠囊列 1：標題 + 進度膠囊 + 功能控制 (移除擴散大陰影) -->
+            <!-- 膠囊列 1：標題 + 進度膠囊 + 功能控制 -->
             <div class="pointer-events-auto flex items-center justify-between bg-slate-950 border border-slate-700/80 rounded-full px-3 py-1.5 shadow-sm">
                 <div class="flex items-center gap-2 overflow-hidden">
                     <h2 class="text-xs font-bold flex items-center gap-1.5 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 shrink-0">
@@ -130,7 +130,7 @@
                 </div>
             </div>
 
-            <!-- 膠囊列 2：獨立懸浮搜尋膠囊 (純色實心無陰影擴散) -->
+            <!-- 膠囊列 2：獨立懸浮搜尋膠囊 -->
             <div class="pointer-events-auto relative w-full">
                 <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                 <input type="text" id="search-input" placeholder="搜尋各公所、路線或餐廳..." class="w-full bg-slate-950 border border-slate-700/80 rounded-full pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400 transition-colors shadow-sm" oninput="handleSearch()">
@@ -182,9 +182,9 @@
                             <button id="btn-clear-photos" onclick="clearPointPhotos()" class="hidden bg-rose-900/80 hover:bg-rose-800 text-rose-200 text-[11px] font-bold py-1 px-2 rounded-lg flex items-center gap-1 cursor-pointer transition-colors border border-rose-700">
                                 <i class="ph ph-trash text-xs"></i> 重置照片
                             </button>
-                            <label class="bg-cyan-600 hover:bg-cyan-500 text-white text-[11px] font-bold py-1 px-2.5 rounded-lg flex items-center gap-1 cursor-pointer transition-colors shadow">
+                            <label id="lbl-file-input" class="bg-cyan-600 hover:bg-cyan-500 text-white text-[11px] font-bold py-1 px-2.5 rounded-lg flex items-center gap-1 cursor-pointer transition-colors shadow">
                                 <i class="ph ph-upload-simple text-sm"></i> 上傳/拍攝
-                                <input type="file" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload(event)">
+                                <input type="file" id="file-input-el" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload(event)">
                             </label>
                         </div>
                     </div>
@@ -676,7 +676,6 @@
         }
 
         function initMap() {
-            // 縮放按鈕置於右下角 (bottomright)，避開頂部膠囊
             map = L.map('map', { zoomControl: false, tap: false }).setView([23.903, 120.951], 10);
             L.control.zoom({ position: 'bottomright' }).addTo(map);
 
@@ -1035,9 +1034,18 @@
             });
         }
 
+        // 🌟 自動管線化：選取/拍照壓縮後自動連鎖啟動 uploadPhotosToDrive()
         async function handlePhotoUpload(event) {
             const files = event.target.files;
             if(!files || !files.length || !currentItemId) return;
+
+            // 鎖定選取按鈕，防呆重疊操作
+            const fileInputEl = document.getElementById('file-input-el');
+            const lblFileInput = document.getElementById('lbl-file-input');
+            if (fileInputEl) fileInputEl.disabled = true;
+            if (lblFileInput) {
+                lblFileInput.classList.add('opacity-50', 'pointer-events-none');
+            }
 
             if (!inspectionPhotos[currentItemId]) inspectionPhotos[currentItemId] = [];
             const grid = document.getElementById('photo-preview-grid');
@@ -1046,8 +1054,8 @@
             const btnUpload = document.getElementById('btn-upload-drive');
             if (btnUpload) {
                 btnUpload.disabled = true;
-                btnUpload.className = "w-full bg-slate-800 border border-slate-700 text-slate-500 text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-not-allowed opacity-50";
-                btnUpload.innerHTML = `<i class="ph ph-spinner animate-spin text-base"></i> 照片處理中，請稍候...`;
+                btnUpload.className = "w-full bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-wait opacity-60";
+                btnUpload.innerHTML = `<i class="ph ph-spinner animate-spin text-base text-cyan-400"></i> 照片壓縮處理中，即將自動上傳...`;
             }
 
             for (let i = 0; i < files.length; i++) {
@@ -1063,6 +1071,15 @@
             event.target.value = '';
             saveState();
             renderPhotos();
+
+            // 解鎖選取按鈕
+            if (fileInputEl) fileInputEl.disabled = false;
+            if (lblFileInput) {
+                lblFileInput.classList.remove('opacity-50', 'pointer-events-none');
+            }
+
+            // 🚀 自動連鎖無縫上傳至雲端
+            await uploadPhotosToDrive();
         }
 
         function renderPhotos() {
@@ -1105,7 +1122,7 @@
                 if (hasPending) {
                     btnUpload.disabled = false;
                     btnUpload.className = "w-full bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg animate-pulse";
-                    btnUpload.innerHTML = `<i class="ph-fill ph-cloud-arrow-up text-base text-white"></i> 一鍵同步至 Google Drive (待傳 ${pendingCount} 張)`;
+                    btnUpload.innerHTML = `<i class="ph-fill ph-cloud-arrow-up text-base text-white"></i> 點擊重試同步至 Google Drive (尚餘 ${pendingCount} 張)`;
                 } else {
                     btnUpload.disabled = true;
                     btnUpload.className = "w-full bg-slate-800 border border-slate-700 text-slate-500 text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-not-allowed opacity-50 shadow-lg";
@@ -1114,7 +1131,7 @@
             }
 
             if(hasPending) {
-                grid.innerHTML += `<div class="col-span-3 text-center text-amber-400 text-[11px] py-1 mt-1 font-bold"><i class="ph-fill ph-clock"></i> 尚有 ${pendingCount} 張照片未上傳雲端，請點擊下方按鈕同步</div>`;
+                grid.innerHTML += `<div class="col-span-3 text-center text-amber-400 text-[11px] py-1 mt-1 font-bold"><i class="ph-fill ph-clock"></i> 尚有 ${pendingCount} 張照片未上傳雲端，請點擊下方按鈕重試</div>`;
             }
         }
 
@@ -1139,12 +1156,12 @@
             renderPhotos();
         }
 
-        // 🌟 極速同步上傳：零延遲推進
+        // 🌟 極速同步上傳：支援自動連鎖與失敗手動重試
         async function uploadPhotosToDrive() {
             const photos = inspectionPhotos[currentItemId] || [];
             const pendingPhotos = photos.filter(p => !p.uploaded);
             
-            if (pendingPhotos.length === 0) return alert("目前沒有需要上傳的新照片！");
+            if (pendingPhotos.length === 0) return;
             
             const btn = document.getElementById('btn-upload-drive');
             if (btn) { 
@@ -1168,7 +1185,7 @@
             for (let cIdx = 0; cIdx < chunks.length; cIdx++) {
                 const currentChunk = chunks[cIdx];
                 if (btn) {
-                    btn.innerHTML = `<i class="ph ph-spinner animate-spin text-base text-cyan-400"></i> 極速同步中 (批次 ${cIdx + 1}/${chunks.length}，本批 ${currentChunk.length} 張)...`;
+                    btn.innerHTML = `<i class="ph ph-spinner animate-spin text-base text-cyan-400"></i> 自動同步中 (批次 ${cIdx + 1}/${chunks.length}，本批 ${currentChunk.length} 張)...`;
                 }
 
                 const photoPayloads = currentChunk.map((p, idx) => ({
@@ -1216,14 +1233,14 @@
                 } catch (err) { 
                     console.error(`第 ${cIdx + 1} 批次傳輸失敗：`, err);
                     hasError = true;
-                    alert(`⚠️ 第 ${cIdx + 1} 批次同步中斷。已成功儲存: ${totalUploaded} 張，剩餘待重試。\n原因：${err.message}`);
+                    alert(`⚠️ 第 ${cIdx + 1} 批次同步中斷。已成功儲存: ${totalUploaded} 張，剩餘待手動重試。\n原因：${err.message}`);
                     break;
                 }
             }
 
             renderPhotos();
             if (!hasError && totalUploaded === pendingPhotos.length) {
-                alert(`✅ 已成功將全部 ${totalUploaded} 張照片極速同步至雲端資料夾！`);
+                // 自動上傳成功，不跳擾人彈窗，狀態按鈕直接變更為「無待傳照片」
             }
         }
 
@@ -1564,7 +1581,7 @@
         window.onload = () => {
             initMap();
             
-            // 初始化 13 鄉鎮市懸浮膠囊 (加上尾端呼吸佔位)
+            // 初始化 13 鄉鎮市懸浮膠囊
             const townshipSelector = document.getElementById('township-selector');
             if (townshipSelector) {
                 Object.keys(mapData).forEach((id) => {
@@ -1580,7 +1597,7 @@
                 townshipSelector.appendChild(spacer);
             }
 
-            // 初始化 5 大路線懸浮卡片膠囊 (加上尾端呼吸佔位)
+            // 初始化 5 大路線懸浮卡片膠囊
             const scheduleSelector = document.getElementById('schedule-selector');
             if (scheduleSelector) {
                 scheduleData.forEach((s) => {
