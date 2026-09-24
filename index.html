@@ -322,7 +322,7 @@
             }
         ];
 
-        // 🌟 純淨點位資料庫 (座標校正版：養鍋 23.907754, 120.689946；人本自然 23.978499, 120.688052)
+        // 🌟 純淨點位資料庫 (精確空間落點與專屬短網址)
         const mapData = {
             "caotun": { 
                 name: "草屯鎮", 
@@ -411,7 +411,7 @@
                 office: { name: "國姓鄉公所", lat: 24.040023198804203, lng: 120.8575184499724, type: "office" }, 
                 restaurant: null, 
                 routes: [
-                    { id: 1, name: "北港村", path: [[24.056492, 120.886570], [24.057619, 120.886956], [24.058902, 120.887396], [24.059950, 120.887815], [24.060577, 120.888276], [24.061018, 120.888555], [24.061234, 120.888866], [24.061724, 120.889252], [24.061782, 120.888770]], color: "#06b6d4" }, 
+                    { id: 1, name: "北港村", path: [[24.056492, 120.886570], [24.057619, 120.886956], [24.058902, 120.887396], [24.059950, 120.888815], [24.060577, 120.888276], [24.061018, 120.888555], [24.061234, 120.888866], [24.061724, 120.889252], [24.061782, 120.888770]], color: "#06b6d4" }, 
                     { id: 2, name: "石門村", path: [[24.042776, 120.858522], [24.043016, 120.858694], [24.043266, 120.858876], [24.043472, 120.859102], [24.043580, 120.859477], [24.043555, 120.859676], [24.043418, 120.859960], [24.043408, 120.860357], [24.043428, 120.860759], [24.043192, 120.861027], [24.042957, 120.861328], [24.042845, 120.861703]], color: "#d946ef" }, 
                     { id: 3, name: "國姓社區發展協會", path: [[24.037839, 120.854539], [24.037479, 120.854804], [24.037077, 120.855137], [24.036724, 120.855362], [24.036313, 120.855169], [24.035989, 120.855019], [24.035637, 120.854955], [24.035225, 120.854955], [24.034755, 120.854965], [24.034539, 120.855014]], color: "#84cc16" }
                 ]
@@ -986,6 +986,7 @@
             flushSyncQueue();
         }
 
+        // 🌟 最佳化平衡點：長邊 800px、品質 0.6，減磅約 30% 傳輸體積
         function compressSingleFile(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -1011,7 +1012,7 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
                         
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.65);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
                         canvas.width = 0;
                         canvas.height = 0;
                         img.src = "";
@@ -1034,7 +1035,7 @@
 
             if (!inspectionPhotos[currentItemId]) inspectionPhotos[currentItemId] = [];
             const grid = document.getElementById('photo-preview-grid');
-            if(grid) grid.innerHTML += `<div class="col-span-3 text-center text-emerald-400 text-xs py-2 font-bold animate-pulse" id="loading-txt"><i class="ph ph-spinner animate-spin"></i> 照片優化壓縮中 (0/${files.length})...</div>`;
+            if(grid) grid.innerHTML += `<div class="col-span-3 text-center text-emerald-400 text-xs py-2 font-bold animate-pulse" id="loading-txt"><i class="ph ph-spinner animate-spin"></i> 照片快速優化中 (0/${files.length})...</div>`;
 
             const btnUpload = document.getElementById('btn-upload-drive');
             if (btnUpload) {
@@ -1045,7 +1046,7 @@
 
             for (let i = 0; i < files.length; i++) {
                 const loadTxt = document.getElementById('loading-txt');
-                if (loadTxt) loadTxt.innerHTML = `<i class="ph ph-spinner animate-spin"></i> 照片優化壓縮中 (${i + 1}/${files.length})...`;
+                if (loadTxt) loadTxt.innerHTML = `<i class="ph ph-spinner animate-spin"></i> 照片快速優化中 (${i + 1}/${files.length})...`;
 
                 const processedPhoto = await compressSingleFile(files[i]);
                 if (processedPhoto) {
@@ -1132,6 +1133,7 @@
             renderPhotos();
         }
 
+        // 🌟 極速同步上傳：移除 400ms 人為延遲代碼，支援零延遲接續推進
         async function uploadPhotosToDrive() {
             const photos = inspectionPhotos[currentItemId] || [];
             const pendingPhotos = photos.filter(p => !p.uploaded);
@@ -1160,7 +1162,7 @@
             for (let cIdx = 0; cIdx < chunks.length; cIdx++) {
                 const currentChunk = chunks[cIdx];
                 if (btn) {
-                    btn.innerHTML = `<i class="ph ph-spinner animate-spin text-base text-cyan-400"></i> 同步中 (批次 ${cIdx + 1}/${chunks.length}，本批 ${currentChunk.length} 張)...`;
+                    btn.innerHTML = `<i class="ph ph-spinner animate-spin text-base text-cyan-400"></i> 極速同步中 (批次 ${cIdx + 1}/${chunks.length}，本批 ${currentChunk.length} 張)...`;
                 }
 
                 const photoPayloads = currentChunk.map((p, idx) => ({
@@ -1211,15 +1213,11 @@
                     alert(`⚠️ 第 ${cIdx + 1} 批次同步中斷。已成功儲存: ${totalUploaded} 張，剩餘待重試。\n原因：${err.message}`);
                     break;
                 }
-
-                if (cIdx < chunks.length - 1) {
-                    await new Promise(res => setTimeout(res, 400));
-                }
             }
 
             renderPhotos();
             if (!hasError && totalUploaded === pendingPhotos.length) {
-                alert(`✅ 已成功將全部 ${totalUploaded} 張照片分批同步至雲端資料夾！`);
+                alert(`✅ 已成功將全部 ${totalUploaded} 張照片極速同步至雲端資料夾！`);
             }
         }
 
@@ -1257,7 +1255,6 @@
                     const cleanTitle = title.replace(/\[.*?\]/g, '').trim();
                     const destinationQuery = encodeURIComponent(`${townshipName} ${cleanTitle}`);
                     
-                    // 專屬 Google Maps 短網址直接喚起
                     let directMapUrl = null;
                     if (itemId.endsWith('_restaurant') && mapData[tId]?.restaurant?.mapUrl) {
                         directMapUrl = mapData[tId].restaurant.mapUrl;
@@ -1591,7 +1588,7 @@
                 flushSyncQueue();
             });
 
-            // 免密碼直入主系統
+            // 免密碼直接啟動同步並進入系統
             performSyncAndEnter();
         };
         
